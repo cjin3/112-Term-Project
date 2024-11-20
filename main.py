@@ -8,8 +8,11 @@ from enemy import *
 from tower import *
 
 def onAppStart(app):
-    app.scenes = ['Title Page', 'Game Menu']
-    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu}
+    app.scenes = ['Title Page', 'Game Menu', 'Map Builder', 'Campaign', 'Load Menu']
+    app.levels = ['']
+
+    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Builder': loadMapBuilder, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu}
+    app.levelLoading = {}
     restart(app)
 
 def restart(app):
@@ -23,10 +26,20 @@ def restart(app):
 def loadTitlePage(app):
     app.width = 1200
     app.height = 800
+    app.buttonFill = 'blue'
+    app.buttonTextFill = 'white'
 def loadGameMenu(app):
-    app.width = 100
-    app.height = 300
-
+    app.width = 1000
+    app.height = 500
+def loadMapBuilder(app):
+    app.width = 1200
+    app.height = 800
+def loadCampaign(app):
+    app.width = 1200
+    app.height = 800
+def loadLoadMenu(app):
+    app.width = 1200
+    app.height = 800
 
 def onStep(app):
     checkChangeScene(app)
@@ -42,17 +55,29 @@ def takeStep(app):
     pass
 
 def drawTitlePage(app):
-    drawLabel("TITLE", app.width/2, app.height/2-300, size=16)
+    drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
 
+    #button vars
+    buttonFill = 'blue'
     #Play button
     buttonWidth = 200
     buttonHeight = 100
     playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill='blue')
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=buttonFill)
+    drawLabel('PLAY', app.width/2, app.height/2, fill='black')
+
+    #Load button
+    buttonWidth = 200
+    buttonHeight = 100
+    gap = 150
+    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=buttonFill)
+    drawLabel('LOAD', app.width/2, app.height/2 + gap, fill='black')
 def drawGameMenu(app):
     pass
 
 def pressPlay(app): app.scene = 'Game Menu'
+def pressLoad(app): app.scene = "Load Menu"
 
 def redrawAll(app):
     if app.scene == 'Title Page':
