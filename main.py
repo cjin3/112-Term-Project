@@ -10,7 +10,6 @@ from tower import *
 def onAppStart(app):
     app.scenes = ['Title Page', 'Game Menu']
     app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu}
-
     restart(app)
 
 def restart(app):
@@ -18,8 +17,8 @@ def restart(app):
     app.scene = 'Title Page'
     app.paused = False
     app.gameOver = False
-
-    #app functions
+    
+    loadTitlePage(app)
 
 def loadTitlePage(app):
     app.width = 1200
@@ -40,21 +39,32 @@ def checkChangeScene(app):
         app.loadingDict[app.scene](app)
 
 def takeStep(app):
-    #loading things
-    #if app.scene == 'Title Page':
-        #loadTitlePage(app)
     pass
 
 def drawTitlePage(app):
-    drawLabel("TITLE", app.width/2, app.height/2, size=16)
+    drawLabel("TITLE", app.width/2, app.height/2-300, size=16)
+
+    #Play button
+    buttonWidth = 200
+    buttonHeight = 100
+    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill='blue')
+def drawGameMenu(app):
+    pass
+
+def pressPlay(app): app.scene = 'Game Menu'
 
 def redrawAll(app):
     if app.scene == 'Title Page':
         drawTitlePage(app)
+    elif app.scene == "Game Menu":
+        drawGameMenu(app)
 
 def onKeyPress(app, keys):
     if 'k' in keys:
         app.scene = "Game Menu"
+    if 'r' in keys:
+        app.scene = 'Title Page'
 
 def onMousePress(app, mouseX, mouseY):
     #check buttons
