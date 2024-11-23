@@ -6,6 +6,7 @@ import random
 from button import *
 from enemy import *
 from tower import *
+from load import *
 
 def onAppStart(app):
     app.scenes = ['Title Page', 'Game Menu', 'Map Builder', 'Campaign', 'Load Menu', 'Endless']
@@ -47,6 +48,7 @@ def loadLoadMenu(app):
 def loadEndless(app):
     app.width = 1200
     app.height = 800
+    app.map = ENDLESS_MAP
 
 def onStep(app):
     checkChangeScene(app)
@@ -91,7 +93,10 @@ def drawCampaign(app):
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
-    pass
+    drawMap(app)
+
+def drawMap(app):
+
 
 def redrawAll(app):
     if app.scene == 'Title Page': drawTitlePage(app)
