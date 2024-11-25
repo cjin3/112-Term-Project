@@ -9,13 +9,12 @@ from tower import *
 from load import *
 
 def onAppStart(app):
-    app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu', 'Endless']
-    app.levels = ['']
+    app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
+    app.levels = ['Endless']
 
     app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless}
-    app.levelLoading = {}
     
-    app.stepsPerSecond = 60
+    app.stepsPerSecond = 5
     app.loaded = False
     restart(app)
 
@@ -26,7 +25,6 @@ def restart(app):
     app.gameOver = False
     app.placement = None    
     loadTitlePage(app)
-
 def loadTitlePage(app):
     app.width = 1200
     app.height = 800
@@ -73,7 +71,27 @@ def checkChangeScene(app):
         print(f'current scene: {app.scene}')
 
 def takeStep(app):
-    pass
+    if app.scene in app.levels:  
+        
+        for tower in app.towers: #let towers attack
+            for enemy in app.enemies:
+                if inRange(enemy, tower):
+                    if (not tower.attacking and tower.attackingEnemy == None) or tower.attackingEnemy == enemy:
+                        damage = tower.dealDamage(enemy)
+                        enemy.takeDamage(damage[0], damage[1])
+                        print(enemy.getHealth())
+
+        for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
+            enemy = app.enemies[i]
+            if enemy.getHealth() <= 0:
+                app.enemies.pop(i)
+                for tower in app.towers:
+                    if tower.attackingEnemy == enemy:
+                        tower.attackingEnemy = None
+                        tower.attacking = False
+
+def inRange(enemy, tower):
+    return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
 
 def drawTitlePage(app):
     drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
@@ -145,7 +163,9 @@ def drawTower(app, tower):
     size = tower.size
     drawCircle(position[0], position[1], size, fill='gray')
 def drawEnemy(app, enemy):
-    pass
+    position = enemy.position
+    size = enemy.size
+    drawCircle(position[0], position[1], size, fill='red')
 def showRange(app, tower):
     range = tower.getRange()
     size = tower.size
@@ -209,16 +229,15 @@ def onMousePress(app, mouseX, mouseY):
             clicked = Button.buttonLocations[location]
             Button.buttonFunctions[clicked](app)
             return
-    if app.scene == 'Endless': #add other screens where you can have towers
+    if app.scene in app.levels:
         if app.placement == 'p':
             newTower = Tower('m', 0, (mouseX, mouseY))
             app.towers.append(newTower)
         elif app.placement == 'e':
-            newEnemy = Enemy('Goblin')
+            newEnemy = Enemy('Goblin', (mouseX, mouseY))
             app.enemies.append(newEnemy)
-            
 
-        
+
 def main():
     runApp()
 

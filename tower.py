@@ -40,10 +40,11 @@ class Tower:
         self.type = type
         self.lvl = lvl
         self.position = position
-        self.pdmg = (0,0)
+        self.pdmg = (10,10)
         self.mdmg = (0,0)
         self.range = 30
         self.attacking = False
+        self.attackingEnemy = None
         self.size = 30
     
     def getLevel(self):
@@ -56,9 +57,11 @@ class Tower:
         return self.position
     def upgrade(self):
         self.lvl += 1
-    def dealDamage(self):
+    def dealDamage(self, enemy):
         pdmg = random.randint(self.pdmg[0], self.pdmg[1])
         mdmg = random.randint(self.mdmg[0], self.mdmg[1])
+        self.attacking = True
+        self.attackingEnemy = enemy
         return (pdmg, mdmg)
     
     def __eq__(self, other) -> bool:
