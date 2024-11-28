@@ -57,6 +57,7 @@ def loadEndless(app):
     loadLevel(app)
     app.loaded = True
 def loadLevel(app):
+    #Towers, Enemies, and Projectiles
     app.healthBarSize = 5
     app.placement = None
     app.towers = []
@@ -64,6 +65,19 @@ def loadLevel(app):
     app.projectiles = []
     app.showingRange = False
 
+    #Map
+    app.cellSize = 40
+    app.startLocation = (0,0)
+    app.endLocation = (0,0)
+    loadMap(app)
+def loadMap(app):
+    rows, cols = len(app.map), len(app.map[0])
+    for row in range(rows):
+        for col in range(cols):
+            location = (col*app.cellSize, row*app.cellSize)
+            cell = app.map[row][col]
+            if cell == 'S': app.startLocation = location
+            elif cell == 'E': app.endLocation = location
 
 def onStep(app):
     checkChangeScene(app)
@@ -109,7 +123,7 @@ def takeStep(app):
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
-        
+
 
 def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
@@ -154,6 +168,7 @@ def drawCampaign(app):
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
+    drawMap(app)
     label = 'p for placing towers, e for placing enemies'
     if app.placement == 'p': label = 'placing towers!'
     elif app.placement == 'e': label = 'placing enemies!'
@@ -168,15 +183,27 @@ def drawEndless(app):
     for projectile in app.projectiles:
         drawProjectile(app, projectile)
     
-    #drawMap(app)
 
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
-    for row in rows:
-        for col in cols:
-            drawCell(app.map, row, col)
-def drawCell(map, row, col): #FINISH THIS
+    for row in range(rows):
+        for col in range(cols):
+            drawCell(app, app.map, row, col)
+def drawCell(app, map, row, col): #FINISH THIS
     cell = map[row][col]
+    location = (col*app.cellSize, row*app.cellSize)
+    if cell == 'S':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 'E':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 'P':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 0:
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='darkGreen')
+    elif cell == 1:
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='green')
+
+    
 
 def drawTower(app, tower):
     position = tower.position
