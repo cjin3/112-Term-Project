@@ -6,6 +6,7 @@ import random
 from button import *
 from enemy import *
 from tower import *
+from projectile import *
 from load import *
 
 def onAppStart(app):
@@ -14,7 +15,7 @@ def onAppStart(app):
 
     app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless}
     
-    app.stepsPerSecond = 5
+    app.stepsPerSecond = 60
     app.loaded = False
     restart(app)
 
@@ -53,11 +54,16 @@ def loadEndless(app):
     app.width = 1200
     app.height = 800
     app.map = ENDLESS_MAP
+    loadLevel(app)
+    app.loaded = True
+def loadLevel(app):
+    app.healthBarSize = 5
     app.placement = None
     app.towers = []
     app.enemies = []
+    app.projectiles = []
     app.showingRange = False
-    app.loaded = True
+
 
 def onStep(app):
     checkChangeScene(app)
@@ -72,14 +78,28 @@ def checkChangeScene(app):
 
 def takeStep(app):
     if app.scene in app.levels:  
-        
-        for tower in app.towers: #let towers attack
+        for tower in app.towers: #let towers spawn projectiles
             for enemy in app.enemies:
                 if inRange(enemy, tower):
-                    if (not tower.attacking and tower.attackingEnemy == None) or tower.attackingEnemy == enemy:
+                    tower.checkAttack()
+                    if (tower.canAttack and tower.attackingEnemy == None) or (tower.attackingEnemy == enemy and tower.canAttack):
+                        towerType = tower.getType()
                         damage = tower.dealDamage(enemy)
-                        enemy.takeDamage(damage[0], damage[1])
-                        print(enemy.getHealth())
+                        projectile = Projectile(tower, enemy, tower.getPosition(), damage)
+                        if towerType == 'Magic': projectile = MagicProjectile(tower, enemy, tower.getPosition(), damage)
+                        elif towerType == 'Archer': projectile = ArcherProjectile(tower, enemy, tower.getPosition(), damage)
+                        elif towerType == 'Bomb': projectile = BombProjectile(tower, enemy, tower.getPosition(), damage)
+                        app.projectiles.append(projectile)
+                        
+        for projectile in app.projectiles: #move projectiles
+            projectile.move()
+        
+        for i in range(len(app.projectiles)-1, -1, -1): #hit enemies and remove projectiles that hit
+            for enemy in app.enemies:
+                if hit(enemy, app.projectiles[i]):
+                    dmg = app.projectiles[i].dmg
+                    enemy.takeDamage(dmg[0], dmg[1])
+                    app.projectiles.pop(i)
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
             enemy = app.enemies[i]
@@ -89,7 +109,10 @@ def takeStep(app):
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
+        
 
+def hit(enemy, projectile):
+    return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
 def inRange(enemy, tower):
     return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
 
@@ -110,7 +133,6 @@ def drawTitlePage(app):
     loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad)
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('LOAD', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
-
 def drawGameMenu(app):
     #Campaign button
     buttonWidth = 250
@@ -125,7 +147,6 @@ def drawGameMenu(app):
     mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor)
     drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Map Editor', app.width/2+buttonWidth/2, app.height/2, fill=app.buttonTextFill)
-
 def drawCampaign(app):
     buttonWidth = 500
     buttonHeight = 500
@@ -144,17 +165,16 @@ def drawEndless(app):
             showRange(app, tower)
     for enemy in app.enemies:
         drawEnemy(app, enemy)
+    for projectile in app.projectiles:
+        drawProjectile(app, projectile)
     
     #drawMap(app)
-
-
 
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
     for row in rows:
         for col in cols:
             drawCell(app.map, row, col)
- 
 def drawCell(map, row, col): #FINISH THIS
     cell = map[row][col]
 
@@ -165,7 +185,17 @@ def drawTower(app, tower):
 def drawEnemy(app, enemy):
     position = enemy.position
     size = enemy.size
+    topLeft = (position[0]-size, position[1]-app.healthBarSize/2-20)
+    drawRect(topLeft[0], topLeft[1], size*2, app.healthBarSize, fill='red')
+    maxHealth = Enemy.health[enemy.getType()]
+    healthRemainingSize = size*2 * (enemy.getHealth()/maxHealth)
+    drawRect(topLeft[0], topLeft[1], healthRemainingSize, app.healthBarSize, fill='green')
     drawCircle(position[0], position[1], size, fill='red')
+def drawProjectile(app, projectile):
+    position = projectile.getPosition()
+    size = projectile.getSize()
+    color = projectile.getColor()
+    drawCircle(position[0], position[1], size, fill=color)
 def showRange(app, tower):
     range = tower.getRange()
     size = tower.size
@@ -231,13 +261,14 @@ def onMousePress(app, mouseX, mouseY):
             return
     if app.scene in app.levels:
         if app.placement == 'p':
-            newTower = Tower('m', 0, (mouseX, mouseY))
+            position = (mouseX, mouseY)
+            newTower = Magic('Magic', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
             newEnemy = Enemy('Goblin', (mouseX, mouseY))
             app.enemies.append(newEnemy)
 
-
+print ('hi')
 def main():
     runApp()
 
