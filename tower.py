@@ -1,4 +1,5 @@
 from enemy import *
+from projectile import *
 import time
 import random
 
@@ -24,6 +25,10 @@ ARCHER_LVL0_PDMG = (13, 15)
 ARCHER_LVL1_PDMG = (34, 39)
 ARCHER_LVL2_PDMG = (67, 75)
 
+ARCHER_LVL0_RANGE = 100
+ARCHER_LVL1_RANGE = 100
+ARCHER_LVL2_RANGE = 100
+
 #Bomb tower constants
 BOMB_LVL0_COST = 320
 BOMB_LVL1_COST = 440
@@ -32,6 +37,10 @@ BOMB_LVL2_COST = 600
 BOMB_LVL0_PDMG = (15, 30)
 BOMB_LVL1_PDMG = (27, 40)
 BOMB_LVL2_PDMG = (50, 110)
+
+BOMB_LVL0_RANGE = 50
+BOMB_LVL1_RANGE = 50
+BOMB_LVL2_RANGE = 50
 
 #
 

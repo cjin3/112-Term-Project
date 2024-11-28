@@ -6,6 +6,7 @@ import random
 from button import *
 from enemy import *
 from tower import *
+from projectile import *
 from load import *
 
 def onAppStart(app):
@@ -53,11 +54,15 @@ def loadEndless(app):
     app.width = 1200
     app.height = 800
     app.map = ENDLESS_MAP
+    loadLevel(app)
+    app.loaded = True
+def loadLevel(app):
     app.placement = None
     app.towers = []
     app.enemies = []
+    app.projectiles = []
     app.showingRange = False
-    app.loaded = True
+
 
 def onStep(app):
     checkChangeScene(app)
@@ -73,13 +78,21 @@ def checkChangeScene(app):
 def takeStep(app):
     if app.scene in app.levels:  
         
-        for tower in app.towers: #let towers attack
+        for tower in app.towers: #let towers spawn projectiles
             for enemy in app.enemies:
                 if inRange(enemy, tower):
                     if (not tower.attacking and tower.attackingEnemy == None) or tower.attackingEnemy == enemy:
+                        towerType = tower.getType()
                         damage = tower.dealDamage(enemy)
-                        enemy.takeDamage(damage[0], damage[1])
-                        print(enemy.getHealth())
+                        projectile = Projectile(tower, enemy, tower.getPosition(), damage)
+                        if towerType == 'Magic': projectile = MagicProjectile(tower, enemy, tower.getPosition(), damage)
+                        elif towerType == 'Archer': projectile = ArcherProjectile(tower, enemy, tower.getPosition(), damage)
+                        elif towerType == 'Bomb': projectile = BombProjectile(tower, enemy, tower.getPosition(), damage)
+                        app.projectiles.append(projectile)
+                        print(app.projectiles)
+                        
+        for projectile in app.projectiles: #move projectiles
+            projectile.move()
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
             enemy = app.enemies[i]
@@ -89,6 +102,8 @@ def takeStep(app):
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
+        
+
 
 def inRange(enemy, tower):
     return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
@@ -144,6 +159,8 @@ def drawEndless(app):
             showRange(app, tower)
     for enemy in app.enemies:
         drawEnemy(app, enemy)
+    for projectile in app.projectiles:
+        drawProjectile(app, projectile)
     
     #drawMap(app)
 
@@ -166,6 +183,12 @@ def drawEnemy(app, enemy):
     position = enemy.position
     size = enemy.size
     drawCircle(position[0], position[1], size, fill='red')
+def drawProjectile(app, projectile):
+    position = projectile.getPosition()
+    size = projectile.getSize()
+    color = projectile.getColor()
+    drawCircle(position[0], position[1], size, fill=color)
+
 def showRange(app, tower):
     range = tower.getRange()
     size = tower.size
@@ -231,13 +254,13 @@ def onMousePress(app, mouseX, mouseY):
             return
     if app.scene in app.levels:
         if app.placement == 'p':
-            newTower = Tower('m', 0, (mouseX, mouseY))
+            newTower = Tower('Magic', 0, (mouseX, mouseY))
             app.towers.append(newTower)
         elif app.placement == 'e':
             newEnemy = Enemy('Goblin', (mouseX, mouseY))
             app.enemies.append(newEnemy)
 
-
+print ('hi')
 def main():
     runApp()
 

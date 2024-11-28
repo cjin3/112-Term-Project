@@ -1,4 +1,5 @@
 from tower import *
+from projectile import *
 import time
 
 class Enemy:
@@ -16,6 +17,8 @@ class Enemy:
         self.marmor = Enemy.marmor[type]
         self.size = Enemy.size[type]
         self.instance = Enemy.instance.get(type, 0) + 1
+        Enemy.instance[self.type] = self.instance
+
     
     def __eq__(self, other) -> bool:
         return (isinstance(other, Enemy)) and (self.type == other.type) and (self.instance == other.instance)
@@ -26,6 +29,8 @@ class Enemy:
         self.health = self.health - mdmgTaken - pdmgTaken
     def getHealth(self):
         return self.health
+    def getPosition(self):
+        return self.position
     
 
     
