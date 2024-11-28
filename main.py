@@ -77,11 +77,11 @@ def checkChangeScene(app):
 
 def takeStep(app):
     if app.scene in app.levels:  
-        
         for tower in app.towers: #let towers spawn projectiles
             for enemy in app.enemies:
                 if inRange(enemy, tower):
-                    if (not tower.attacking and tower.attackingEnemy == None) or tower.attackingEnemy == enemy:
+                    tower.checkAttack()
+                    if (tower.canAttack and tower.attackingEnemy == None) or (tower.attackingEnemy == enemy and tower.canAttack):
                         towerType = tower.getType()
                         damage = tower.dealDamage(enemy)
                         projectile = Projectile(tower, enemy, tower.getPosition(), damage)
@@ -93,6 +93,14 @@ def takeStep(app):
                         
         for projectile in app.projectiles: #move projectiles
             projectile.move()
+        
+        for i in range(len(app.projectiles)-1, -1, -1): #hit enemies and remove projectiles that hit
+            for enemy in app.enemies:
+                if hit(enemy, app.projectiles[i]):
+                    dmg = app.projectiles[i].dmg
+                    enemy.takeDamage(dmg[0], dmg[1])
+                    app.projectiles.pop(i)
+                    print(enemy.health)
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
             enemy = app.enemies[i]
@@ -104,7 +112,8 @@ def takeStep(app):
                         tower.attacking = False
         
 
-
+def hit(enemy, projectile):
+    return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
 def inRange(enemy, tower):
     return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
 
@@ -254,7 +263,8 @@ def onMousePress(app, mouseX, mouseY):
             return
     if app.scene in app.levels:
         if app.placement == 'p':
-            newTower = Tower('Magic', 0, (mouseX, mouseY))
+            position = (mouseX, mouseY)
+            newTower = Magic('Magic', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
             newEnemy = Enemy('Goblin', (mouseX, mouseY))
