@@ -30,7 +30,6 @@ class Projectile:
         self.color = 'white'
         towerType = self.Tower.getType()
         towerLvl = self.Tower.getLevel()
-        print(towerType, towerLvl)
         if towerType == 'Magic': 
             self.speed = Projectile.PROJECTILE_SPEED_M[towerLvl]
             self.size = Projectile.PROJECTILE_SIZE_M[towerLvl]

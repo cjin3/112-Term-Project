@@ -15,7 +15,7 @@ def onAppStart(app):
 
     app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless}
     
-    app.stepsPerSecond = 5
+    app.stepsPerSecond = 60
     app.loaded = False
     restart(app)
 
@@ -57,6 +57,7 @@ def loadEndless(app):
     loadLevel(app)
     app.loaded = True
 def loadLevel(app):
+    app.healthBarSize = 5
     app.placement = None
     app.towers = []
     app.enemies = []
@@ -89,7 +90,6 @@ def takeStep(app):
                         elif towerType == 'Archer': projectile = ArcherProjectile(tower, enemy, tower.getPosition(), damage)
                         elif towerType == 'Bomb': projectile = BombProjectile(tower, enemy, tower.getPosition(), damage)
                         app.projectiles.append(projectile)
-                        print(app.projectiles)
                         
         for projectile in app.projectiles: #move projectiles
             projectile.move()
@@ -100,7 +100,6 @@ def takeStep(app):
                     dmg = app.projectiles[i].dmg
                     enemy.takeDamage(dmg[0], dmg[1])
                     app.projectiles.pop(i)
-                    print(enemy.health)
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
             enemy = app.enemies[i]
@@ -134,7 +133,6 @@ def drawTitlePage(app):
     loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad)
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('LOAD', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
-
 def drawGameMenu(app):
     #Campaign button
     buttonWidth = 250
@@ -149,7 +147,6 @@ def drawGameMenu(app):
     mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor)
     drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Map Editor', app.width/2+buttonWidth/2, app.height/2, fill=app.buttonTextFill)
-
 def drawCampaign(app):
     buttonWidth = 500
     buttonHeight = 500
@@ -173,14 +170,11 @@ def drawEndless(app):
     
     #drawMap(app)
 
-
-
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
     for row in rows:
         for col in cols:
             drawCell(app.map, row, col)
- 
 def drawCell(map, row, col): #FINISH THIS
     cell = map[row][col]
 
@@ -191,13 +185,17 @@ def drawTower(app, tower):
 def drawEnemy(app, enemy):
     position = enemy.position
     size = enemy.size
+    topLeft = (position[0]-size, position[1]-app.healthBarSize/2-20)
+    drawRect(topLeft[0], topLeft[1], size*2, app.healthBarSize, fill='red')
+    maxHealth = Enemy.health[enemy.getType()]
+    healthRemainingSize = size*2 * (enemy.getHealth()/maxHealth)
+    drawRect(topLeft[0], topLeft[1], healthRemainingSize, app.healthBarSize, fill='green')
     drawCircle(position[0], position[1], size, fill='red')
 def drawProjectile(app, projectile):
     position = projectile.getPosition()
     size = projectile.getSize()
     color = projectile.getColor()
     drawCircle(position[0], position[1], size, fill=color)
-
 def showRange(app, tower):
     range = tower.getRange()
     size = tower.size

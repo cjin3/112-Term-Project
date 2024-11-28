@@ -27,10 +27,10 @@ class Enemy:
         mdmgTaken = mdmg - self.marmor
         pdmgTaken = pdmg - self.parmor
         self.health = self.health - mdmgTaken - pdmgTaken
-    def getHealth(self):
-        return self.health
-    def getPosition(self):
-        return self.position
+    
+    def getHealth(self): return self.health
+    def getPosition(self): return self.position
+    def getType(self): return self.type
     
 
     
