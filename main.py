@@ -63,13 +63,16 @@ def loadLevel(app):
     app.towers = []
     app.enemies = []
     app.projectiles = []
+
     app.showingRange = False
+    app.placingTowers = False
 
     #Map
     app.cellSize = 40
     app.startLocation = (0,0)
     app.endLocation = (0,0)
     loadMap(app)
+
 def loadMap(app):
     rows, cols = len(app.map), len(app.map[0])
     for row in range(rows):
@@ -108,11 +111,13 @@ def takeStep(app):
         for projectile in app.projectiles: #move projectiles
             projectile.move()
         
-        for i in range(len(app.projectiles)-1, -1, -1): #hit enemies and remove projectiles that hit
-            for enemy in app.enemies:
+        for enemy in app.enemies: #hit enemies and remove projectiles that hit
+            for i in range(len(app.projectiles)-1, -1, -1): 
                 if hit(enemy, app.projectiles[i]):
                     dmg = app.projectiles[i].dmg
                     enemy.takeDamage(dmg[0], dmg[1])
+                    app.projectiles.pop(i)
+                elif outOfBoard(app, app.projectiles[i]):
                     app.projectiles.pop(i)
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
@@ -129,6 +134,9 @@ def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
 def inRange(enemy, tower):
     return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
+def outOfBoard(app, projectile):
+    location = projectile.getPosition()
+    return (0 > location[0] or location[0] > app.width) or (0 > location[1] or location[1] > app.height)
 
 def drawTitlePage(app):
     drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
@@ -199,9 +207,9 @@ def drawCell(app, map, row, col): #FINISH THIS
     elif cell == 'P':
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
     elif cell == 0:
-        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='darkGreen')
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='limeGreen')
     elif cell == 1:
-        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='green')
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='lawnGreen')
 
     
 
@@ -263,7 +271,7 @@ def onKeyPress(app, keys):
     if 'r' in keys:
         app.loaded = True
         app.scene = 'Title Page'
-    if app.scene == 'Endless':
+    if app.scene in app.levels:
         if 'p' in keys:
             print('placing towers!')
             app.placement = 'p'
@@ -275,7 +283,7 @@ def onKeyPress(app, keys):
             app.showingRange = True
 
 def onKeyRelease(app, keys):
-    if app.scene == 'Endless':
+    if app.scene in app.levels:
         if 's' in keys:
             app.showingRange = False
 
@@ -295,7 +303,6 @@ def onMousePress(app, mouseX, mouseY):
             newEnemy = Enemy('Goblin', (mouseX, mouseY))
             app.enemies.append(newEnemy)
 
-print ('hi')
 def main():
     runApp()
 
