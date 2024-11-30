@@ -67,7 +67,7 @@ def loadLevel(app):
     app.placingTowers = False
     app.placement = None
     app.mouseLocation = (0,0)
-    app.previewOpacity = 30
+    app.previewOpacity = 80
 
     #Map
     app.cellSize = 40
@@ -130,7 +130,6 @@ def takeStep(app):
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
-
 
 def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
@@ -204,7 +203,7 @@ def drawMap(app):
     for row in range(rows):
         for col in range(cols):
             drawCell(app, app.map, row, col)
-def drawCell(app, map, row, col): #FINISH THIS
+def drawCell(app, map, row, col):
     cell = map[row][col]
     location = (col*app.cellSize, row*app.cellSize)
     if cell == 'S':
@@ -232,16 +231,25 @@ def drawArcherTower(app, tower, opacity):
     drawCircle(position[0], position[1], size, fill='brown', opacity=opacity)
 def drawMagicPreview(app):
     position = app.mouseLocation
-    size = MAGIC_LVL0_SIZE
-    drawCircle(position[0], position[1], size, fill='lightBlue', opacity=app.previewOpacity)
+    size = MAGIC_SIZE
+    if isLegalTowerPlacement(app, 'm', position):
+        drawCircle(position[0], position[1], size, fill='lightBlue', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
 def drawBombPreview(app):
     position = app.mouseLocation
-    size = BOMB_LVL0_SIZE
-    drawCircle(position[0], position[1], size, fill='grey', opacity=app.previewOpacity)
+    size = BOMB_SIZE
+    if isLegalTowerPlacement(app, 'b', position):
+        drawCircle(position[0], position[1], size, fill='grey', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
 def drawArcherPreview(app):
     position = app.mouseLocation
-    size = ARCHER_LVL0_SIZE
-    drawCircle(position[0], position[1], size, fill='brown', opacity=app.previewOpacity)
+    size = ARCHER_SIZE
+    if isLegalTowerPlacement(app, 'a', position):
+        drawCircle(position[0], position[1], size, fill='brown', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
 
 def drawEnemy(app, enemy):
     position = enemy.position
@@ -270,10 +278,10 @@ def redrawAll(app):
     elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
     elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
     elif app.scene == 'Endless' and app.loaded: drawEndless(app)
-    elif app.scene in app.levels:
-        if app.placement == 'm': drawMagicPreview(app)
-        elif app.placement == 'b': drawBombPreview(app)
-        elif app.placement == 'a': drawArcherPreview(app)
+    if app.scene in app.levels:
+        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
     
 #button functions
 def pressPlay(app): 
@@ -345,18 +353,25 @@ def onMousePress(app, mouseX, mouseY):
         
 def isLegalTowerPlacement(app, type, position):
     size = 0
-    if type == 'a': size = ARCHER_LVL0_SIZE
-    elif type == 'b': size = BOMB_LVL0_SIZE
-    elif type == 'm': size = MAGIC_LVL0_SIZE
+    if type == 'a': size = ARCHER_SIZE
+    elif type == 'b': size = BOMB_SIZE
+    elif type == 'm': size = MAGIC_SIZE
     
     if (position[0] + size > app.width) or (position[0] - size < 0): return False
     elif (position[1] + size > app.height) or (position[1] - size < 0): return False
+
     topPosition = (position[0], position[1] + size)
     botPosition = (position[0], position[1] - size)
     leftPosition = (position[0] - size, position[1])
     rightPosition = (position[0] + size, position[1])
-
     if getCell(app, topPosition) != 1 or getCell(app, botPosition) != 1 or getCell(app, leftPosition) != 1 or getCell(app, rightPosition) != 1: return False
+
+    for tower in app.towers:
+        towerSize = tower.getSize()
+        towerPosition = tower.getPosition()
+        if intersectingCircles(position, towerPosition, towerSize, size):
+            return False
+
     return True
 
 def onMouseMove(app, mouseX, mouseY):
@@ -365,8 +380,10 @@ def onMouseMove(app, mouseX, mouseY):
 
 def getCell(app, position):
     location = (position[0]//app.cellSize, position[1]//app.cellSize)
-    print(location)
     return app.map[location[1]][location[0]]
+
+def intersectingCircles(position1, position2, size1, size2):
+    return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
 
 def main():
     runApp()
