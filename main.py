@@ -57,13 +57,32 @@ def loadEndless(app):
     loadLevel(app)
     app.loaded = True
 def loadLevel(app):
+    #Towers, Enemies, and Projectiles
     app.healthBarSize = 5
-    app.placement = None
     app.towers = []
     app.enemies = []
     app.projectiles = []
-    app.showingRange = False
 
+    app.showingRange = False
+    app.placingTowers = False
+    app.placement = None
+    app.mouseLocation = (0,0)
+    app.previewOpacity = 80
+
+    #Map
+    app.cellSize = 40
+    app.startLocation = (0,0)
+    app.endLocation = (0,0)
+    loadMap(app)
+
+def loadMap(app):
+    rows, cols = len(app.map), len(app.map[0])
+    for row in range(rows):
+        for col in range(cols):
+            location = (col*app.cellSize, row*app.cellSize)
+            cell = app.map[row][col]
+            if cell == 'S': app.startLocation = location
+            elif cell == 'E': app.endLocation = location
 
 def onStep(app):
     checkChangeScene(app)
@@ -94,11 +113,13 @@ def takeStep(app):
         for projectile in app.projectiles: #move projectiles
             projectile.move()
         
-        for i in range(len(app.projectiles)-1, -1, -1): #hit enemies and remove projectiles that hit
-            for enemy in app.enemies:
+        for enemy in app.enemies: #hit enemies and remove projectiles that hit
+            for i in range(len(app.projectiles)-1, -1, -1): 
                 if hit(enemy, app.projectiles[i]):
                     dmg = app.projectiles[i].dmg
                     enemy.takeDamage(dmg[0], dmg[1])
+                    app.projectiles.pop(i)
+                elif outOfBoard(app, app.projectiles[i]): #remove projectiles out of board
                     app.projectiles.pop(i)
 
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
@@ -109,12 +130,14 @@ def takeStep(app):
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
-        
 
 def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
 def inRange(enemy, tower):
     return enemy.size + tower.range + tower.size >= distance(enemy.position[0], enemy.position[1], tower.position[0], tower.position[1])
+def outOfBoard(app, projectile):
+    location = projectile.getPosition()
+    return (0 > location[0] or location[0] > app.width) or (0 > location[1] or location[1] > app.height)
 
 def drawTitlePage(app):
     drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
@@ -154,13 +177,19 @@ def drawCampaign(app):
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
+    drawMap(app)
     label = 'p for placing towers, e for placing enemies'
-    if app.placement == 'p': label = 'placing towers!'
+    if app.placement == 'm': label = 'placing magic towers!'
+    elif app.placement == 'a': label = 'placing archer towers!'
+    elif app.placement == 'b': label = 'placing bomb towers!'
     elif app.placement == 'e': label = 'placing enemies!'
     drawLabel(label, app.height-100, app.width/2)
 
     for tower in app.towers:
-        drawTower(app, tower)
+        towerType = tower.getType()
+        if towerType == 'Magic': drawMagicTower(app, tower, 100)
+        elif towerType == 'Archer': drawArcherTower(app, tower, 100)
+        elif towerType == 'Bomb': drawBombTower(app, tower, 100)
         if app.showingRange:
             showRange(app, tower)
     for enemy in app.enemies:
@@ -168,20 +197,60 @@ def drawEndless(app):
     for projectile in app.projectiles:
         drawProjectile(app, projectile)
     
-    #drawMap(app)
 
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
-    for row in rows:
-        for col in cols:
-            drawCell(app.map, row, col)
-def drawCell(map, row, col): #FINISH THIS
+    for row in range(rows):
+        for col in range(cols):
+            drawCell(app, app.map, row, col)
+def drawCell(app, map, row, col):
     cell = map[row][col]
+    location = (col*app.cellSize, row*app.cellSize)
+    if cell == 'S':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 'E':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 'P':
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+    elif cell == 0:
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='limeGreen')
+    elif cell == 1:
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='lawnGreen')
 
-def drawTower(app, tower):
+def drawMagicTower(app, tower, opacity):
     position = tower.position
-    size = tower.size
-    drawCircle(position[0], position[1], size, fill='gray')
+    size = MAGIC_SIZE
+    drawCircle(position[0], position[1], size, fill='lightBlue', opacity=opacity)
+def drawBombTower(app, tower, opacity):
+    position = tower.position
+    size = BOMB_SIZE
+    drawCircle(position[0], position[1], size, fill='grey', opacity=opacity)
+def drawArcherTower(app, tower, opacity):
+    position = tower.position
+    size = ARCHER_SIZE
+    drawCircle(position[0], position[1], size, fill='brown', opacity=opacity)
+def drawMagicPreview(app):
+    position = app.mouseLocation
+    size = MAGIC_SIZE
+    if isLegalTowerPlacement(app, 'm', position):
+        drawCircle(position[0], position[1], size, fill='lightBlue', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
+def drawBombPreview(app):
+    position = app.mouseLocation
+    size = BOMB_SIZE
+    if isLegalTowerPlacement(app, 'b', position):
+        drawCircle(position[0], position[1], size, fill='grey', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
+def drawArcherPreview(app):
+    position = app.mouseLocation
+    size = ARCHER_SIZE
+    if isLegalTowerPlacement(app, 'a', position):
+        drawCircle(position[0], position[1], size, fill='brown', opacity=app.previewOpacity)
+    else:
+        drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
+
 def drawEnemy(app, enemy):
     position = enemy.position
     size = enemy.size
@@ -209,7 +278,12 @@ def redrawAll(app):
     elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
     elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
     elif app.scene == 'Endless' and app.loaded: drawEndless(app)
-
+    if app.scene in app.levels:
+        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+    
+#button functions
 def pressPlay(app): 
     app.scene = 'Game Menu'
     app.loaded = False
@@ -228,6 +302,7 @@ def pressEndless(app):
 def pressMapEditor(app): 
     app.scene = 'Map Editor'
     app.loaded = False
+#end button functions
 
 def onKeyPress(app, keys):
     if 'k' in keys:
@@ -236,19 +311,18 @@ def onKeyPress(app, keys):
     if 'r' in keys:
         app.loaded = True
         app.scene = 'Title Page'
-    if app.scene == 'Endless':
-        if 'p' in keys:
-            print('placing towers!')
-            app.placement = 'p'
-        elif 'e' in keys:
-            print('placing enemies!')
-            app.placement = 'e'
+    if app.scene in app.levels:
+        if app.placingTowers:
+            if 'm' in keys: app.placement = 'm'
+            elif 'a' in keys: app.placement = 'a'
+            elif 'b' in keys: app.placement = 'b'
         if 's' in keys:
-            print('showing range')
             app.showingRange = True
+        if 'e' in keys:
+            app.placement = 'e'
 
 def onKeyRelease(app, keys):
-    if app.scene == 'Endless':
+    if app.scene in app.levels:
         if 's' in keys:
             app.showingRange = False
 
@@ -260,15 +334,57 @@ def onMousePress(app, mouseX, mouseY):
             Button.buttonFunctions[clicked](app)
             return
     if app.scene in app.levels:
-        if app.placement == 'p':
-            position = (mouseX, mouseY)
+        position = (mouseX, mouseY)
+        app.mouseLocation = position
+        if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position):
             newTower = Magic('Magic', position, 0)
+            app.towers.append(newTower)
+        elif app.placement == 'b' and app.placingTowers and isLegalTowerPlacement(app, 'b', position):
+            newTower = Bomb('Bomb', position, 0)
+            app.towers.append(newTower)
+        elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position):
+            newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
             newEnemy = Enemy('Goblin', (mouseX, mouseY))
             app.enemies.append(newEnemy)
+        else:
+            app.placingTowers = True
+        
+def isLegalTowerPlacement(app, type, position):
+    size = 0
+    if type == 'a': size = ARCHER_SIZE
+    elif type == 'b': size = BOMB_SIZE
+    elif type == 'm': size = MAGIC_SIZE
+    
+    if (position[0] + size > app.width) or (position[0] - size < 0): return False
+    elif (position[1] + size > app.height) or (position[1] - size < 0): return False
 
-print ('hi')
+    topPosition = (position[0], position[1] + size)
+    botPosition = (position[0], position[1] - size)
+    leftPosition = (position[0] - size, position[1])
+    rightPosition = (position[0] + size, position[1])
+    if getCell(app, topPosition) != 1 or getCell(app, botPosition) != 1 or getCell(app, leftPosition) != 1 or getCell(app, rightPosition) != 1: return False
+
+    for tower in app.towers:
+        towerSize = tower.getSize()
+        towerPosition = tower.getPosition()
+        if intersectingCircles(position, towerPosition, towerSize, size):
+            return False
+
+    return True
+
+def onMouseMove(app, mouseX, mouseY):
+    if app.scene in app.levels:
+        app.mouseLocation = (mouseX, mouseY)
+
+def getCell(app, position):
+    location = (position[0]//app.cellSize, position[1]//app.cellSize)
+    return app.map[location[1]][location[0]]
+
+def intersectingCircles(position1, position2, size1, size2):
+    return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
+
 def main():
     runApp()
 

@@ -8,7 +8,7 @@ MAGIC_LVL0_COST = 280
 MAGIC_LVL1_COST = 340
 MAGIC_LVL2_COST = 540
 
-MAGIC_LVL0_MDMG = (10, 20)
+MAGIC_LVL0_MDMG = (100, 200)
 MAGIC_LVL1_MDMG = (30, 50)
 MAGIC_LVL2_MDMG = (70, 100)
 
@@ -19,6 +19,8 @@ MAGIC_LVL2_RANGE = 300
 MAGIC_LVL0_ATKSP = 2
 MAGIC_LVL1_ATKSP = 7
 MAGIC_LVL2_ATKSP = 7
+
+MAGIC_SIZE = 30
 
 #Archer tower constants
 ARCHER_LVL0_COST = 200
@@ -37,6 +39,8 @@ ARCHER_LVL0_ATKSP = 4
 ARCHER_LVL1_ATKSP = 3
 ARCHER_LVL2_ATKSP = 3
 
+ARCHER_SIZE = 20
+
 #Bomb tower constants
 BOMB_LVL0_COST = 320
 BOMB_LVL1_COST = 440
@@ -53,6 +57,8 @@ BOMB_LVL2_RANGE = 50
 BOMB_LVL0_ATKSP = 20
 BOMB_LVL1_ATKSP = 18
 BOMB_LVL2_ATKSP = 16
+
+BOMB_SIZE = 40
 
 class Tower:
     def __init__(self, type, lvl, position):
@@ -77,6 +83,8 @@ class Tower:
         return self.range
     def getPosition(self):
         return self.position
+    def getSize(self):
+        return self.size
     
     def upgrade(self):
         self.lvl += 1
@@ -92,7 +100,6 @@ class Tower:
         if currentTime - self.time >= self.attackSpeed: 
             self.canAttack = True
             self.time = currentTime
-        
     
     def __eq__(self, other) -> bool:
         return (other.isinstance(Tower)) and (self.lvl == other.lvl) and (self.position == other.position) and (self.type == other.type)
@@ -101,6 +108,7 @@ class Magic(Tower):
     def __init__(self, type, position, lvl):
         super().__init__(type, lvl, position)
         self.pdmg = (0,0)
+        self.size = MAGIC_SIZE
         if self.lvl == 0: 
             self.cost = MAGIC_LVL0_COST
             self.mdmg = MAGIC_LVL0_MDMG
@@ -110,21 +118,49 @@ class Magic(Tower):
             self.cost = MAGIC_LVL1_COST
             self.mdmg = MAGIC_LVL1_MDMG
             self.range = MAGIC_LVL1_RANGE
+            self.attackSpeed = MAGIC_LVL1_ATKSP
         elif self.lvl == 2: 
             self.cost = MAGIC_LVL2_COST
             self.mdmg = MAGIC_LVL2_MDMG
             self.range = MAGIC_LVL2_RANGE
+            self.attackSpeed = MAGIC_LVL2_ATKSP
 
 class Archer(Tower):
     def __init__(self, type, position, lvl):
+        self.size = ARCHER_SIZE
         super().__init__(type, lvl, position)
-        if self.lvl == 0: self.cost = ARCHER_LVL0_COST
-        elif self.lvl == 1: self.cost = ARCHER_LVL1_COST
-        elif self.lvl == 2: self.cost = ARCHER_LVL2_COST
+        if self.lvl == 0: 
+            self.cost = ARCHER_LVL0_COST
+            self.pdmg = ARCHER_LVL0_PDMG
+            self.range = ARCHER_LVL0_RANGE
+            self.attackSpeed = ARCHER_LVL0_ATKSP
+        elif self.lvl == 1: 
+            self.cost = ARCHER_LVL1_COST
+            self.pdmg = ARCHER_LVL1_PDMG
+            self.range = ARCHER_LVL1_RANGE
+            self.attackSpeed = ARCHER_LVL1_ATKSP
+        elif self.lvl == 2: 
+            self.cost = ARCHER_LVL2_COST
+            self.pdmg = ARCHER_LVL2_PDMG
+            self.range = ARCHER_LVL2_RANGE
+            self.attackSpeed = ARCHER_LVL2_ATKSP
 
 class Bomb(Tower):
     def __init__(self, type, position, lvl):
+        self.size = BOMB_SIZE
         super().__init__(type, lvl, position)
-        if self.lvl == 0: self.cost = BOMB_LVL0_COST
-        elif self.lvl == 1: self.cost = BOMB_LVL1_COST
-        elif self.lvl == 2: self.cost = BOMB_LVL2_COST
+        if self.lvl == 0: 
+            self.cost = BOMB_LVL0_COST
+            self.pdmg = BOMB_LVL0_PDMG
+            self.range = BOMB_LVL0_RANGE
+            self.attackSpeed = BOMB_LVL0_ATKSP
+        elif self.lvl == 1: 
+            self.cost = BOMB_LVL1_COST
+            self.pdmg = BOMB_LVL1_PDMG
+            self.range = BOMB_LVL1_RANGE
+            self.attackSpeed = BOMB_LVL1_ATKSP
+        elif self.lvl == 2: 
+            self.cost = BOMB_LVL2_COST
+            self.pdmg = BOMB_LVL2_PDMG
+            self.range = BOMB_LVL2_RANGE
+            self.attackSpeed = BOMB_LVL2_ATKSP
