@@ -73,16 +73,52 @@ def loadLevel(app):
     app.cellSize = 40
     app.startLocation = (0,0)
     app.endLocation = (0,0)
+    app.enemyPath = []
     loadMap(app)
+    loadEnemyPath(app)
+    print(app.enemyPath)
 
 def loadMap(app):
     rows, cols = len(app.map), len(app.map[0])
     for row in range(rows):
         for col in range(cols):
-            location = (col*app.cellSize, row*app.cellSize)
+            location = (col, row)
             cell = app.map[row][col]
             if cell == 'S': app.startLocation = location
             elif cell == 'E': app.endLocation = location
+def loadEnemyPath(app):
+    app.enemyPath = loadEnemyPathHelper(app, app.startLocation, [], None)
+
+def loadEnemyPathHelper(app, location, list, prevDirection):
+    if app.map[location[1]][location[0]] == 'E':
+        list.append(((location[0], location[1]), prevDirection))
+        return list
+    else:
+        left = (location[0]-1, location[1])
+        right = (location[0]+1, location[1])
+        up = (location[0], location[1]-1)
+        down = (location[0], location[1]+1)
+        
+        if prevDirection != 'right' and isLegalCell(app, left) and (app.map[left[1]][left[0]] == 'P' or app.map[left[1]][left[0]] == 'E'): #check left
+            list.append(((left[0]*app.cellSize + app.cellSize/2, left[1]*app.cellSize + app.cellSize/2), 'left'))
+            return loadEnemyPathHelper(app, left, list, 'left')
+        elif prevDirection != 'left' and isLegalCell(app, right) and (app.map[right[1]][right[0]] == 'P' or app.map[right[1]][right[0]] == 'E'): #check right
+            list.append(((right[0]*app.cellSize + app.cellSize/2, right[1]*app.cellSize + app.cellSize/2), 'right'))
+            return loadEnemyPathHelper(app, right, list, 'right')
+        elif prevDirection != 'up' and isLegalCell(app, down) and (app.map[down[1]][down[0]] == 'P' or app.map[down[1]][down[0]] == 'E'): #check down
+            list.append(((down[0]*app.cellSize + app.cellSize/2, down[1]*app.cellSize + app.cellSize/2), 'down'))
+            return loadEnemyPathHelper(app, down, list, 'down')
+        elif prevDirection != 'down' and isLegalCell(app, up) and (app.map[up[1]][up[0]] == 'P' or app.map[up[1]][up[0]] == 'E'): #check up
+            list.append(((up[0]*app.cellSize + app.cellSize/2, up[1]*app.cellSize + app.cellSize/2), 'up'))
+            return loadEnemyPathHelper(app, up, list, 'up')
+
+def isLegalCell(app, position):
+    numRows = app.height//app.cellSize
+    numCols = app.width//app.cellSize
+    if (position[0] < 0) or (position[0] > numCols): return False
+    elif (position[1] < 0) or (position[1] > numRows): return False
+    return True
+        
 
 def onStep(app):
     checkChangeScene(app)
