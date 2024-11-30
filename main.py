@@ -219,15 +219,15 @@ def drawCell(app, map, row, col):
 
 def drawMagicTower(app, tower, opacity):
     position = tower.position
-    size = tower.size
+    size = MAGIC_SIZE
     drawCircle(position[0], position[1], size, fill='lightBlue', opacity=opacity)
 def drawBombTower(app, tower, opacity):
     position = tower.position
-    size = tower.size
+    size = BOMB_SIZE
     drawCircle(position[0], position[1], size, fill='grey', opacity=opacity)
 def drawArcherTower(app, tower, opacity):
     position = tower.position
-    size = tower.size
+    size = ARCHER_SIZE
     drawCircle(position[0], position[1], size, fill='brown', opacity=opacity)
 def drawMagicPreview(app):
     position = app.mouseLocation
