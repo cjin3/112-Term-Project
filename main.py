@@ -71,8 +71,8 @@ def loadLevel(app):
 
     #Map
     app.cellSize = 40
-    app.startLocation = (0,0)
-    app.endLocation = (0,0)
+    app.startCell = (0,0)
+    app.endCell = (0,0)
     app.enemyPath = []
     loadMap(app)
     loadEnemyPath(app)
@@ -84,14 +84,14 @@ def loadMap(app):
         for col in range(cols):
             location = (col, row)
             cell = app.map[row][col]
-            if cell == 'S': app.startLocation = location
-            elif cell == 'E': app.endLocation = location
+            if cell == 'S': app.startCell = location
+            elif cell == 'E': app.endCell = location
 def loadEnemyPath(app):
-    app.enemyPath = loadEnemyPathHelper(app, app.startLocation, [], None)
+    app.enemyPath = loadEnemyPathHelper(app, app.startCell, [], None)
 
 def loadEnemyPathHelper(app, location, list, prevDirection):
     if app.map[location[1]][location[0]] == 'E':
-        list.append(((location[0], location[1]), prevDirection))
+        list.append(((location[0]*app.cellSize + app.cellSize/2, location[1]*app.cellSize + app.cellSize/2), prevDirection))
         return list
     else:
         left = (location[0]-1, location[1])
@@ -148,6 +148,9 @@ def takeStep(app):
                         
         for projectile in app.projectiles: #move projectiles
             projectile.move()
+        
+        for enemy in app.enemies: #move enemies
+            enemy.move(app.enemyPath)
         
         for enemy in app.enemies: #hit enemies and remove projectiles that hit
             for i in range(len(app.projectiles)-1, -1, -1): 
@@ -362,6 +365,10 @@ def onKeyRelease(app, keys):
         if 's' in keys:
             app.showingRange = False
 
+def onMouseMove(app, mouseX, mouseY):
+    if app.scene in app.levels:
+        app.mouseLocation = (mouseX, mouseY)
+
 def onMousePress(app, mouseX, mouseY):
     #check buttons
     for location in Button.buttonLocations.keys():
@@ -382,7 +389,8 @@ def onMousePress(app, mouseX, mouseY):
             newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
-            newEnemy = Enemy('Goblin', (mouseX, mouseY))
+            startLocation = (app.startCell[0] * app.cellSize + app.cellSize/2, app.startCell[1] * app.cellSize + app.cellSize/2)
+            newEnemy = Enemy('Goblin', startLocation, startLocation, app.enemyPath)
             app.enemies.append(newEnemy)
         else:
             app.placingTowers = True
@@ -410,14 +418,9 @@ def isLegalTowerPlacement(app, type, position):
 
     return True
 
-def onMouseMove(app, mouseX, mouseY):
-    if app.scene in app.levels:
-        app.mouseLocation = (mouseX, mouseY)
-
 def getCell(app, position):
     location = (position[0]//app.cellSize, position[1]//app.cellSize)
     return app.map[location[1]][location[0]]
-
 def intersectingCircles(position1, position2, size1, size2):
     return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
 
