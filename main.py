@@ -17,6 +17,8 @@ def onAppStart(app):
     
     app.stepsPerSecond = 60
     app.loaded = False
+
+    app.needMoreMoneyDraw = False
     restart(app)
 
 def restart(app):
@@ -69,6 +71,7 @@ def loadLevel(app):
     app.placement = None
     app.mouseLocation = (0,0)
     app.previewOpacity = 80
+    app.needMoreMoneyDraw = False
 
     #Map
     app.cellSize = 40
@@ -326,9 +329,15 @@ def redrawAll(app):
     elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
     elif app.scene == 'Endless' and app.loaded: drawEndless(app)
     if app.scene in app.levels:
+        #draw side menu
+
+        #previews
         if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
         elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
         elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+
+        #need more money label
+        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
     
 #button functions
 def pressPlay(app): 
@@ -387,13 +396,13 @@ def onMousePress(app, mouseX, mouseY):
     if app.scene in app.levels:
         position = (mouseX, mouseY)
         app.mouseLocation = position
-        if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position):
+        if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position) and hasMoney(app, MAGIC_LVL0_COST):
             newTower = Magic('Magic', position, 0)
             app.towers.append(newTower)
-        elif app.placement == 'b' and app.placingTowers and isLegalTowerPlacement(app, 'b', position):
+        elif app.placement == 'b' and app.placingTowers and isLegalTowerPlacement(app, 'b', position) and hasMoney(app, BOMB_LVL0_COST):
             newTower = Bomb('Bomb', position, 0)
             app.towers.append(newTower)
-        elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position):
+        elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position) and hasMoney(app, ARCHER_LVL0_COST):
             newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
@@ -425,7 +434,12 @@ def isLegalTowerPlacement(app, type, position):
             return False
 
     return True
-
+def hasMoney(app, cost):
+    if app.money >= cost:
+        app.money -= cost
+        return True
+    app.needMoreMoneyDraw = True
+    return False
 def getCell(app, position):
     location = (position[0]//app.cellSize, position[1]//app.cellSize)
     return app.map[location[1]][location[0]]

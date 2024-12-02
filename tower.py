@@ -114,16 +114,19 @@ class Magic(Tower):
             self.mdmg = MAGIC_LVL0_MDMG
             self.range = MAGIC_LVL0_RANGE
             self.attackSpeed = MAGIC_LVL0_ATKSP
+            self.cost = MAGIC_LVL0_COST
         elif self.lvl == 1: 
             self.cost = MAGIC_LVL1_COST
             self.mdmg = MAGIC_LVL1_MDMG
             self.range = MAGIC_LVL1_RANGE
             self.attackSpeed = MAGIC_LVL1_ATKSP
+            self.cost = MAGIC_LVL1_COST
         elif self.lvl == 2: 
             self.cost = MAGIC_LVL2_COST
             self.mdmg = MAGIC_LVL2_MDMG
             self.range = MAGIC_LVL2_RANGE
             self.attackSpeed = MAGIC_LVL2_ATKSP
+            self.cost = MAGIC_LVL2_COST
 
 class Archer(Tower):
     def __init__(self, type, position, lvl):
@@ -134,16 +137,19 @@ class Archer(Tower):
             self.pdmg = ARCHER_LVL0_PDMG
             self.range = ARCHER_LVL0_RANGE
             self.attackSpeed = ARCHER_LVL0_ATKSP
+            self.cost = ARCHER_LVL0_COST
         elif self.lvl == 1: 
             self.cost = ARCHER_LVL1_COST
             self.pdmg = ARCHER_LVL1_PDMG
             self.range = ARCHER_LVL1_RANGE
             self.attackSpeed = ARCHER_LVL1_ATKSP
+            self.cost = ARCHER_LVL1_COST
         elif self.lvl == 2: 
             self.cost = ARCHER_LVL2_COST
             self.pdmg = ARCHER_LVL2_PDMG
             self.range = ARCHER_LVL2_RANGE
             self.attackSpeed = ARCHER_LVL2_ATKSP
+            self.cost = ARCHER_LVL2_COST
 
 class Bomb(Tower):
     def __init__(self, type, position, lvl):
@@ -154,13 +160,16 @@ class Bomb(Tower):
             self.pdmg = BOMB_LVL0_PDMG
             self.range = BOMB_LVL0_RANGE
             self.attackSpeed = BOMB_LVL0_ATKSP
+            self.cost = BOMB_LVL0_COST
         elif self.lvl == 1: 
             self.cost = BOMB_LVL1_COST
             self.pdmg = BOMB_LVL1_PDMG
             self.range = BOMB_LVL1_RANGE
             self.attackSpeed = BOMB_LVL1_ATKSP
+            self.cost = BOMB_LVL1_COST
         elif self.lvl == 2: 
             self.cost = BOMB_LVL2_COST
             self.pdmg = BOMB_LVL2_PDMG
             self.range = BOMB_LVL2_RANGE
             self.attackSpeed = BOMB_LVL2_ATKSP
+            self.cost = BOMB_LVL2_COST
