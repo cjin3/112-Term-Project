@@ -80,7 +80,6 @@ def loadLevel(app):
     app.enemyPath = []
     loadMap(app)
     loadEnemyPath(app)
-    print(app.enemyPath)
 
 def loadMap(app):
     rows, cols = len(app.map), len(app.map[0])
@@ -92,7 +91,6 @@ def loadMap(app):
             elif cell == 'E': app.endCell = location
 def loadEnemyPath(app):
     app.enemyPath = loadEnemyPathHelper(app, app.startCell, [], None)
-
 def loadEnemyPathHelper(app, location, list, prevDirection):
     if app.map[location[1]][location[0]] == 'E':
         list.append(((location[0]*app.cellSize + app.cellSize/2, location[1]*app.cellSize + app.cellSize/2), prevDirection))
@@ -115,7 +113,6 @@ def loadEnemyPathHelper(app, location, list, prevDirection):
         elif prevDirection != 'down' and isLegalCell(app, up) and (app.map[up[1]][up[0]] == 'P' or app.map[up[1]][up[0]] == 'E'): #check up
             list.append(((up[0]*app.cellSize + app.cellSize/2, up[1]*app.cellSize + app.cellSize/2), 'up'))
             return loadEnemyPathHelper(app, up, list, 'up')
-
 def isLegalCell(app, position):
     numRows = app.height//app.cellSize
     numCols = app.width//app.cellSize
@@ -320,25 +317,47 @@ def showRange(app, tower):
     size = tower.size
     position = tower.getPosition()
     drawCircle(position[0], position[1], range+size, fill='blue', opacity=30)
+def drawSideMenu(app):
+    opacity = 70
+    drawRect(1000, 0, 200, 800, fill='brown', opacity=opacity)
+    drawLabel('PICK A TOWER', 1100, 100, size=20)
+
+    #draw magic tower
+    drawLabel('Press "m" for Magic', 1100, 150, size=16)
+    drawCircle(1100, 200, MAGIC_SIZE, fill='lightBlue', opacity=100)
+
+    #draw bomb tower
+    drawLabel('Press "b" for Bomb', 1100, 300, size=16)
+    drawCircle(1100, 350, BOMB_SIZE, fill='grey', opacity=100)
+
+    #draw archer tower
+    drawLabel('Press "a" for Archer', 1100, 450, size=16)
+    drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
+
 
 def redrawAll(app):
-    if app.scene == 'Title Page' and app.loaded: drawTitlePage(app)
-    elif app.scene == "Game Menu" and app.loaded: drawGameMenu(app)
-    elif app.scene == "Load Menu" and app.loaded: drawLoadMenu(app)
-    elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
-    elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
-    elif app.scene == 'Endless' and app.loaded: drawEndless(app)
-    if app.scene in app.levels:
-        #draw side menu
+    if app.loaded:
+        if app.scene == 'Title Page' and app.loaded: drawTitlePage(app)
+        elif app.scene == "Game Menu" and app.loaded: drawGameMenu(app)
+        elif app.scene == "Load Menu" and app.loaded: drawLoadMenu(app)
+        elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
+        elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
+        elif app.scene == 'Endless' and app.loaded: drawEndless(app)
+        if app.scene in app.levels:
+            #draw side menu
+            if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
 
-        #previews
-        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
-        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
-        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+            #previews
+            if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+            elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+            elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
 
-        #need more money label
-        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
-    
+            #need more money label
+            if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+
+def mouseInSideMenu(app):
+    return (1000 <= app.mouseLocation[0] <= 1200) and (0 <= app.mouseLocation[1] <= 800)
+
 #button functions
 def pressPlay(app): 
     app.scene = 'Game Menu'
