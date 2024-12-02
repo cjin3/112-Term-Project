@@ -53,6 +53,7 @@ def loadLoadMenu(app):
 def loadEndless(app):
     app.width = 1200
     app.height = 800
+    app.money = 1000
     app.map = ENDLESS_MAP
     loadLevel(app)
     app.loaded = True
@@ -152,6 +153,13 @@ def takeStep(app):
         for enemy in app.enemies: #move enemies
             enemy.move(app.enemyPath)
         
+        for tower in app.towers: #check if enemies have moved out of range
+            enemy = tower.attackingEnemy
+            if enemy != None:
+                if not inRange(enemy, tower):
+                    tower.attackingEnemy = None
+                    tower.attacking = False
+
         for enemy in app.enemies: #hit enemies and remove projectiles that hit
             for i in range(len(app.projectiles)-1, -1, -1): 
                 if hit(enemy, app.projectiles[i]):

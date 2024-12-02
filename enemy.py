@@ -23,7 +23,6 @@ class Enemy:
         self.prevCell = startCell
         firstSpot = enemyPath[0]
         self.nextCell = firstSpot[0]
-        print(self.position, self.prevCell, self.nextCell)
         self.instance = Enemy.instance.get(type, 0) + 1
         Enemy.instance[self.type] = self.instance
 
@@ -31,16 +30,6 @@ class Enemy:
         return (isinstance(other, Enemy)) and (self.type == other.type) and (self.instance == other.instance)
 
     def move(self, path):
-        #find where enemy currently is
-        #go to the next one
-        #[((60.0, 380.0), 'right'), ((100.0, 380.0), 'right'), ((100.0, 420.0), 'down'), ((140.0, 420.0), 'right'), 
-        # ((180.0, 420.0), 'right'), ((180.0, 380.0), 'up'), ((220.0, 380.0), 'right'), ((260.0, 380.0), 'right'), 
-        # ((300.0, 380.0), 'right'), ((340.0, 380.0), 'right'), ((380.0, 380.0), 'right'), ((420.0, 380.0), 'right'), 
-        # ((460.0, 380.0), 'right'), ((500.0, 380.0), 'right'), ((540.0, 380.0), 'right'), ((580.0, 380.0), 'right'), 
-        # ((620.0, 380.0), 'right'), ((660.0, 380.0), 'right'), ((700.0, 380.0), 'right'), ((740.0, 380.0), 'right'), 
-        # ((780.0, 380.0), 'right'), ((820.0, 380.0), 'right'), ((860.0, 380.0), 'right'), ((900.0, 380.0), 'right'), 
-        # ((940.0, 380.0), 'right'), ((980.0, 380.0), 'right'), ((1020.0, 380.0), 'right'), ((1060.0, 380.0), 'right'), 
-        # ((1100.0, 380.0), 'right'), ((1140.0, 380.0), 'right'), ((1180.0, 380.0), 'right'), ((1180.0, 380.0), 'right')]
         for i in range(len(path)-1):
             spot = path[i]
             nextSpot = path[i+1]
@@ -71,7 +60,6 @@ class Enemy:
             self.position = (self.position[0], self.nextCell[1])
             self.prevCell = self.nextCell
             self.nextCell = newNextSpot[0]
-        print(self.position, self.prevCell, self.nextCell, direction)
 
 
 
