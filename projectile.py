@@ -9,7 +9,7 @@ class Projectile:
     PROJECTILE_SPEED_A = {0:3, 1:4, 2:5}
 
     PROJECTILE_SIZE_M = {0:3, 1:3, 2:3}
-    PROJECTILE_SIZE_B = {0:4, 1:4, 2:5}
+    PROJECTILE_SIZE_B = {0:7, 1:7, 2:8}
     PROJECTILE_SIZE_A = {0:2, 1:2, 2:3}
 
     PROJECTILE_COLOR_M = 'blue'

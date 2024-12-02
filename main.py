@@ -17,6 +17,8 @@ def onAppStart(app):
     
     app.stepsPerSecond = 60
     app.loaded = False
+
+    app.needMoreMoneyDraw = False
     restart(app)
 
 def restart(app):
@@ -53,6 +55,7 @@ def loadLoadMenu(app):
 def loadEndless(app):
     app.width = 1200
     app.height = 800
+    app.money = 1000
     app.map = ENDLESS_MAP
     loadLevel(app)
     app.loaded = True
@@ -68,21 +71,58 @@ def loadLevel(app):
     app.placement = None
     app.mouseLocation = (0,0)
     app.previewOpacity = 80
+    app.needMoreMoneyDraw = False
 
     #Map
     app.cellSize = 40
-    app.startLocation = (0,0)
-    app.endLocation = (0,0)
+    app.startCell = (0,0)
+    app.endCell = (0,0)
+    app.enemyPath = []
     loadMap(app)
+    loadEnemyPath(app)
+    print(app.enemyPath)
 
 def loadMap(app):
     rows, cols = len(app.map), len(app.map[0])
     for row in range(rows):
         for col in range(cols):
-            location = (col*app.cellSize, row*app.cellSize)
+            location = (col, row)
             cell = app.map[row][col]
-            if cell == 'S': app.startLocation = location
-            elif cell == 'E': app.endLocation = location
+            if cell == 'S': app.startCell = location
+            elif cell == 'E': app.endCell = location
+def loadEnemyPath(app):
+    app.enemyPath = loadEnemyPathHelper(app, app.startCell, [], None)
+
+def loadEnemyPathHelper(app, location, list, prevDirection):
+    if app.map[location[1]][location[0]] == 'E':
+        list.append(((location[0]*app.cellSize + app.cellSize/2, location[1]*app.cellSize + app.cellSize/2), prevDirection))
+        return list
+    else:
+        left = (location[0]-1, location[1])
+        right = (location[0]+1, location[1])
+        up = (location[0], location[1]-1)
+        down = (location[0], location[1]+1)
+        
+        if prevDirection != 'right' and isLegalCell(app, left) and (app.map[left[1]][left[0]] == 'P' or app.map[left[1]][left[0]] == 'E'): #check left
+            list.append(((left[0]*app.cellSize + app.cellSize/2, left[1]*app.cellSize + app.cellSize/2), 'left'))
+            return loadEnemyPathHelper(app, left, list, 'left')
+        elif prevDirection != 'left' and isLegalCell(app, right) and (app.map[right[1]][right[0]] == 'P' or app.map[right[1]][right[0]] == 'E'): #check right
+            list.append(((right[0]*app.cellSize + app.cellSize/2, right[1]*app.cellSize + app.cellSize/2), 'right'))
+            return loadEnemyPathHelper(app, right, list, 'right')
+        elif prevDirection != 'up' and isLegalCell(app, down) and (app.map[down[1]][down[0]] == 'P' or app.map[down[1]][down[0]] == 'E'): #check down
+            list.append(((down[0]*app.cellSize + app.cellSize/2, down[1]*app.cellSize + app.cellSize/2), 'down'))
+            return loadEnemyPathHelper(app, down, list, 'down')
+        elif prevDirection != 'down' and isLegalCell(app, up) and (app.map[up[1]][up[0]] == 'P' or app.map[up[1]][up[0]] == 'E'): #check up
+            list.append(((up[0]*app.cellSize + app.cellSize/2, up[1]*app.cellSize + app.cellSize/2), 'up'))
+            return loadEnemyPathHelper(app, up, list, 'up')
+
+def isLegalCell(app, position):
+    numRows = app.height//app.cellSize
+    numCols = app.width//app.cellSize
+    if (position[0] < 0) or (position[0] > numCols): return False
+    elif (position[1] < 0) or (position[1] > numRows): return False
+    return True
+        
 
 def onStep(app):
     checkChangeScene(app)
@@ -113,6 +153,16 @@ def takeStep(app):
         for projectile in app.projectiles: #move projectiles
             projectile.move()
         
+        for enemy in app.enemies: #move enemies
+            enemy.move(app.enemyPath)
+        
+        for tower in app.towers: #check if enemies have moved out of range
+            enemy = tower.attackingEnemy
+            if enemy != None:
+                if not inRange(enemy, tower):
+                    tower.attackingEnemy = None
+                    tower.attacking = False
+
         for enemy in app.enemies: #hit enemies and remove projectiles that hit
             for i in range(len(app.projectiles)-1, -1, -1): 
                 if hit(enemy, app.projectiles[i]):
@@ -279,9 +329,15 @@ def redrawAll(app):
     elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
     elif app.scene == 'Endless' and app.loaded: drawEndless(app)
     if app.scene in app.levels:
+        #draw side menu
+
+        #previews
         if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
         elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
         elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+
+        #need more money label
+        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
     
 #button functions
 def pressPlay(app): 
@@ -326,6 +382,10 @@ def onKeyRelease(app, keys):
         if 's' in keys:
             app.showingRange = False
 
+def onMouseMove(app, mouseX, mouseY):
+    if app.scene in app.levels:
+        app.mouseLocation = (mouseX, mouseY)
+
 def onMousePress(app, mouseX, mouseY):
     #check buttons
     for location in Button.buttonLocations.keys():
@@ -336,17 +396,18 @@ def onMousePress(app, mouseX, mouseY):
     if app.scene in app.levels:
         position = (mouseX, mouseY)
         app.mouseLocation = position
-        if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position):
+        if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position) and hasMoney(app, MAGIC_LVL0_COST):
             newTower = Magic('Magic', position, 0)
             app.towers.append(newTower)
-        elif app.placement == 'b' and app.placingTowers and isLegalTowerPlacement(app, 'b', position):
+        elif app.placement == 'b' and app.placingTowers and isLegalTowerPlacement(app, 'b', position) and hasMoney(app, BOMB_LVL0_COST):
             newTower = Bomb('Bomb', position, 0)
             app.towers.append(newTower)
-        elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position):
+        elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position) and hasMoney(app, ARCHER_LVL0_COST):
             newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
-            newEnemy = Enemy('Goblin', (mouseX, mouseY))
+            startLocation = (app.startCell[0] * app.cellSize + app.cellSize/2, app.startCell[1] * app.cellSize + app.cellSize/2)
+            newEnemy = Enemy('Goblin', startLocation, startLocation, app.enemyPath)
             app.enemies.append(newEnemy)
         else:
             app.placingTowers = True
@@ -373,15 +434,15 @@ def isLegalTowerPlacement(app, type, position):
             return False
 
     return True
-
-def onMouseMove(app, mouseX, mouseY):
-    if app.scene in app.levels:
-        app.mouseLocation = (mouseX, mouseY)
-
+def hasMoney(app, cost):
+    if app.money >= cost:
+        app.money -= cost
+        return True
+    app.needMoreMoneyDraw = True
+    return False
 def getCell(app, position):
     location = (position[0]//app.cellSize, position[1]//app.cellSize)
     return app.map[location[1]][location[0]]
-
 def intersectingCircles(position1, position2, size1, size2):
     return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
 
