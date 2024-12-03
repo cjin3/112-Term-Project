@@ -10,7 +10,9 @@ class Enemy:
     parmor = {'Goblin':0}
     marmor = {'Goblin':0}
     size = {'Goblin':10}
-    speed = {'Goblin':1}
+    speed = {'Goblin':5}
+    money = {'Goblin':40}
+    healthLost = {'Goblin':1}
 
     def __init__(self, type, position, startCell, enemyPath) -> None:
         self.type = type
@@ -20,9 +22,14 @@ class Enemy:
         self.marmor = Enemy.marmor[type]
         self.size = Enemy.size[type]
         self.speed = Enemy.speed[type]
+        self.money = Enemy.money[type]
+        self.healthLost = Enemy.healthLost[type]
         self.prevCell = startCell
         firstSpot = enemyPath[0]
         self.nextCell = firstSpot[0]
+        self.finalCell = enemyPath[-1][0]
+        print(self.finalCell)
+        self.reachedEnd = False
         self.instance = Enemy.instance.get(type, 0) + 1
         Enemy.instance[self.type] = self.instance
 
@@ -60,6 +67,8 @@ class Enemy:
             self.position = (self.position[0], self.nextCell[1])
             self.prevCell = self.nextCell
             self.nextCell = newNextSpot[0]
+        if self.finalCell == self.prevCell:
+            self.reachedEnd = True
 
 
 
@@ -71,6 +80,9 @@ class Enemy:
     def getHealth(self): return self.health
     def getPosition(self): return self.position
     def getType(self): return self.type
+    def getFinished(self): return self.reachedEnd
+    def getMoney(self): return self.money
+    def getHealthLost(self): return self.healthLost
     
 
     

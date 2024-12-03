@@ -72,6 +72,9 @@ def loadLevel(app):
     app.mouseLocation = (0,0)
     app.previewOpacity = 80
     app.needMoreMoneyDraw = False
+    app.drawTowerUpgrade = (False, None)
+
+    app.health = 1
 
     #Map
     app.cellSize = 40
@@ -172,11 +175,28 @@ def takeStep(app):
         for i in range(len(app.enemies)-1, -1, -1): #dead enemies die
             enemy = app.enemies[i]
             if enemy.getHealth() <= 0:
+                money = enemy.getMoney()
+                app.money += money
                 app.enemies.pop(i)
                 for tower in app.towers:
                     if tower.attackingEnemy == enemy:
                         tower.attackingEnemy = None
                         tower.attacking = False
+        
+        for i in range(len(app.enemies)-1, -1, -1): #enemies at the end disappear, lose health
+            enemy = app.enemies[i]
+            if enemy.getFinished():
+                app.health -= enemy.getHealthLost()
+                app.enemies.pop(i)
+                for tower in app.towers:
+                    if tower.attackingEnemy == enemy:
+                        tower.attackingEnemy = None
+                        tower.attacking = False
+
+        if app.health <= 0: 
+            print('gameover!')
+            app.gameOver = True
+
 
 def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
@@ -333,7 +353,8 @@ def drawSideMenu(app):
     #draw archer tower
     drawLabel('Press "a" for Archer', 1100, 450, size=16)
     drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
-
+def drawTowerUpgrade(app, tower):
+    pass
 
 def redrawAll(app):
     if app.loaded:
@@ -354,6 +375,9 @@ def redrawAll(app):
 
             #need more money label
             if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+            
+            #upgrade tower menu
+            if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
 
 def mouseInSideMenu(app):
     return (1000 <= app.mouseLocation[0] <= 1200) and (0 <= app.mouseLocation[1] <= 800)
@@ -415,6 +439,9 @@ def onMousePress(app, mouseX, mouseY):
     if app.scene in app.levels:
         position = (mouseX, mouseY)
         app.mouseLocation = position
+        for tower in app.towers:
+            if clickedTower(tower, position):
+                app.drawTowerUpgrade = (True, tower)
         if app.placement == 'm' and app.placingTowers and isLegalTowerPlacement(app, 'm', position) and hasMoney(app, MAGIC_LVL0_COST):
             newTower = Magic('Magic', position, 0)
             app.towers.append(newTower)
@@ -464,6 +491,10 @@ def getCell(app, position):
     return app.map[location[1]][location[0]]
 def intersectingCircles(position1, position2, size1, size2):
     return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
+def clickedTower(tower, position):
+    towerPosition = tower.getPosition()
+    towerSize = tower.getSize()
+    return (towerPosition[0] - towerSize <= position[0] <= towerPosition[0] + towerSize) and (towerPosition[1] - towerSize <= position[1] <= towerPosition[1] + towerSize)
 
 def main():
     runApp()
