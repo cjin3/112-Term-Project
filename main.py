@@ -408,6 +408,16 @@ def drawGameOver(app):
     checkHover(app, mainMenuButton)
     drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
     drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
+def drawPauseMenu(app):
+    drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+    drawLabel('Paused', app.width/2, app.height/2-100, size=100)
+
+    drawLabel('Press "p" to unpause', app.width/2, app.height/2+50, size=50)
+
+    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, 'Endless', pressMainMenuEndless, app.fillHover, app.fillNorm)
+    checkHover(app, mainMenuButton)
+    drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
+    drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
 
 def redrawAll(app):
     if app.loaded:
@@ -484,8 +494,8 @@ def onKeyPress(app, keys):
             elif 'b' in keys: app.placement = 'b'
         if 's' in keys:
             app.showingRange = True
-        if 'e' in keys:
-            app.placement = 'e'
+        if 'p' in keys:
+            app.paused = not app.paused
 
 def onKeyRelease(app, keys):
     if app.scene in app.levels:
