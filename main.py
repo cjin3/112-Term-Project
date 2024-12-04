@@ -376,7 +376,7 @@ def showRange(app, tower):
     range = tower.getRange()
     size = tower.size
     position = tower.getPosition()
-    drawCircle(position[0], position[1], range+size, fill='blue', opacity=30)
+    drawCircle(position[0], position[1], range+size, fill='blue', opacity=20)
 def drawSideMenu(app):
     opacity = 70
     drawRect(1000, 0, 200, 800, fill='brown', opacity=opacity)
@@ -399,8 +399,15 @@ def drawGameOver(app):
     drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
     drawLabel('GAME OVER!', app.width/2, app.height/2-100, size=100)
 
-    restartButton = Button(app.width/2-50, app.height/2, app.width/2+50, app.height/2+50, 'Endless', pressRestartEndless, app.fillHover, app.fillNorm)
-    drawRect(app.width/2-50, app.height/2, 100, 50, fill=restartButton.getFill(), border='black')
+    restartButton = Button(app.width/2-100, app.height/2, app.width/2+100, app.height/2+100, 'Endless', pressRestartEndless, app.fillHover, app.fillNorm)
+    checkHover(app, restartButton)
+    drawRect(app.width/2-100, app.height/2, 200, 100, fill=restartButton.getFill(), border=app.fillNorm)
+    drawLabel('RESTART', app.width/2, app.height/2+50, size=20, fill=app.buttonTextFill)
+
+    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, 'Endless', pressMainMenuEndless, app.fillHover, app.fillNorm)
+    checkHover(app, mainMenuButton)
+    drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
+    drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
 
 def redrawAll(app):
     if app.loaded:
@@ -454,8 +461,13 @@ def pressMapEditor(app):
     app.loaded = False
 def pressRestartEndless(app):
     loadEndless(app)
+    app.gameOver = False
+    print(app.enemies)
+    print(app.gameOver)
 def pressStartWave(app):
     app.startWave = True
+def pressMainMenuEndless(app):
+    restart(app)
 #end button functions
 
 def onKeyPress(app, keys):
