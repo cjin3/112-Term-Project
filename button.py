@@ -5,7 +5,6 @@ class Button:
     def __init__(self, topLeftX, topLeftY, botRightX, botRightY, scene, func, fillHover, fillNorm):
         self.fillHover = fillHover
         self.fillNorm = fillNorm
-        print(self.fillNorm, self.fillHover)
         self.fill = self.fillNorm
         self.topLeft = (topLeftX, topLeftY)
         self.botRight = (botRightX, botRightY)
@@ -22,9 +21,7 @@ class Button:
     def __repr__(self):
         return f'<Button location={self.location}, func={self.func}, fill={self.fill}>'
     
-    def setFillHover(self): 
-        self.fill = self.fillHover
-        print(self.fill, self.fillHover)
+    def setFillHover(self): self.fill = self.fillHover
     def setFillNorm(self): self.fill = self.fillNorm
 
     def getLocation(self): return self.location

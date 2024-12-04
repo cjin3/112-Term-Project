@@ -32,4 +32,5 @@ ENDLESS_MAP = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 
 ENDLESS_WAVE_1 = ['Goblin', 'Goblin', 'Goblin', 'Goblin']
-ENDLESS_WAVE_2 = [['Goblin','Goblin','Goblin'], ['Goblin','Goblin','Goblin'],'Goblin','Goblin']
+ENDLESS_WAVE_2 = ['Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin']
+ENDLESS_WAVES = [ENDLESS_WAVE_1, ENDLESS_WAVE_2]

@@ -28,7 +28,6 @@ class Enemy:
         firstSpot = enemyPath[0]
         self.nextCell = firstSpot[0]
         self.finalCell = enemyPath[-1][0]
-        print(self.finalCell)
         self.reachedEnd = False
         self.instance = Enemy.instance.get(type, 0) + 1
         Enemy.instance[self.type] = self.instance

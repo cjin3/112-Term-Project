@@ -61,6 +61,9 @@ def loadEndless(app):
     app.height = 800
     app.money = 1000
     app.map = ENDLESS_MAP
+    app.waves = ENDLESS_WAVES
+    app.wave = ENDLESS_WAVES[0]
+    app.lastSpawn = 0
     loadLevel(app)
     app.loaded = True
 def loadLevel(app):
@@ -76,6 +79,9 @@ def loadLevel(app):
     app.previewOpacity = 80
     app.needMoreMoneyDraw = False
     app.drawTowerUpgrade = (False, None)
+    app.lastSpawnTime = 0
+    app.spawnTime = 0.5
+    app.startWave = False
 
     app.health = 1
 
@@ -129,7 +135,6 @@ def isLegalCell(app, position):
 
 def onStep(app):
     checkChangeScene(app)
-
     if not app.paused and not app.gameOver:
         takeStep(app)
 
@@ -147,7 +152,22 @@ def checkChangeScene(app):
         print(f'current scene: {app.scene}')
 
 def takeStep(app):
-    if app.scene in app.levels:  
+    if app.scene in app.levels:
+        if app.startWave:
+            for i in range(app.lastSpawn, len(app.wave)): #spawn waves
+                currTime = time.time()
+                if currTime - app.lastSpawnTime >= app.spawnTime:
+                    enemy = app.wave[i]
+                    startLocation = (app.startCell[0] * app.cellSize + app.cellSize/2, app.startCell[1] * app.cellSize + app.cellSize/2)
+                    newEnemy = Enemy(enemy, startLocation, startLocation, app.enemyPath)
+                    app.lastSpawn += 1
+                    app.lastSpawnTime = currTime
+                    app.enemies.append(newEnemy)
+                    print(app.lastSpawn)
+                    print(app.enemies)
+            app.startWave = False
+
+
         for tower in app.towers: #let towers spawn projectiles
             for enemy in app.enemies:
                 if inRange(enemy, tower):
@@ -483,9 +503,7 @@ def onMousePress(app, mouseX, mouseY):
             newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
         elif app.placement == 'e':
-            startLocation = (app.startCell[0] * app.cellSize + app.cellSize/2, app.startCell[1] * app.cellSize + app.cellSize/2)
-            newEnemy = Enemy('Goblin', startLocation, startLocation, app.enemyPath)
-            app.enemies.append(newEnemy)
+            pass
         else:
             app.placingTowers = True
         
