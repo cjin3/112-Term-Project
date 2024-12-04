@@ -19,6 +19,10 @@ def onAppStart(app):
     app.loaded = False
 
     app.needMoreMoneyDraw = False
+    app.mouseLocation = (0,0)
+    app.fillHover = 'gray'
+    app.fillNorm = 'black'
+
     restart(app)
 
 def restart(app):
@@ -69,7 +73,6 @@ def loadLevel(app):
     app.showingRange = False
     app.placingTowers = False
     app.placement = None
-    app.mouseLocation = (0,0)
     app.previewOpacity = 80
     app.needMoreMoneyDraw = False
     app.drawTowerUpgrade = (False, None)
@@ -126,9 +129,17 @@ def isLegalCell(app, position):
 
 def onStep(app):
     checkChangeScene(app)
+
     if not app.paused and not app.gameOver:
         takeStep(app)
 
+
+def checkHover(app, button):
+    location = button.getLocation()
+    if (app.scene == location[2]) and (location[0][0] <= app.mouseLocation[0] <= location[1][0]) and (location[0][1] <= app.mouseLocation[1] <= location[1][1]):
+        button.setFillHover()
+    else:
+        button.setFillNorm()
 def checkChangeScene(app):
     if app.scene != app.prevScene:
         app.prevScene = app.scene
@@ -197,7 +208,10 @@ def takeStep(app):
             print('gameover!')
             app.gameOver = True
 
-
+def mouseHover(app, button):
+    location = button.getLocation()
+    topLeft, botRight = location[0], location[1]
+    return (topLeft[0] <= app.mouseLocation[0] <= botRight[0]) and (topLeft[1] <= app.mouseLocation[1] <= botRight[1])
 def hit(enemy, projectile):
     return enemy.size + projectile.size >= distance(enemy.position[0], enemy.position[1], projectile.position[0], projectile.position[1])
 def inRange(enemy, tower):
@@ -212,35 +226,40 @@ def drawTitlePage(app):
     #Play button
     buttonWidth = 200
     buttonHeight = 100
-    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
+    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay, app.fillHover, app.fillNorm)
+    checkHover(app, playButton)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=playButton.getFill(), border=app.fillNorm)
     drawLabel('PLAY', app.width/2, app.height/2, fill=app.buttonTextFill)
 
     #Load button
     buttonWidth = 200
     buttonHeight = 100
     gap = 150
-    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=app.buttonFill)
+    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad, app.fillHover, app.fillNorm)
+    checkHover(app, loadButton)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
     drawLabel('LOAD', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
 def drawGameMenu(app):
     #Campaign button
     buttonWidth = 250
     buttonHeight = 500
-    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, app.width/2, app.height/2+buttonHeight/2,  'Game Menu', pressCampaign)
-    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
+    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, app.width/2, app.height/2+buttonHeight/2,  'Game Menu', pressCampaign, app.fillHover, app.fillNorm)
+    checkHover(app, campaignButton)
+    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=campaignButton.getFill(), border=app.fillNorm )
     drawLabel('Campaign', app.width/2-buttonWidth/2-100, app.height/2, fill=app.buttonTextFill)
 
     #Map Editor button
     buttonWidth = 250
     buttonHeight = 500
-    mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor)
-    drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
+    mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor, app.fillHover, app.fillNorm)
+    checkHover(app, mapEditorButton)
+    drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill='white')
     drawLabel('Map Editor', app.width/2+buttonWidth/2, app.height/2, fill=app.buttonTextFill)
 def drawCampaign(app):
     buttonWidth = 500
     buttonHeight = 500
-    endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless)
+    endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless, app.fillHover, app.fillNorm)
+    checkHover(app, endlessButton)
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
@@ -291,7 +310,7 @@ def drawMagicTower(app, tower, opacity):
 def drawBombTower(app, tower, opacity):
     position = tower.position
     size = BOMB_SIZE
-    drawCircle(position[0], position[1], size, fill='grey', opacity=opacity)
+    drawCircle(position[0], position[1], size, fill='gray', opacity=opacity)
 def drawArcherTower(app, tower, opacity):
     position = tower.position
     size = ARCHER_SIZE
@@ -307,7 +326,7 @@ def drawBombPreview(app):
     position = app.mouseLocation
     size = BOMB_SIZE
     if isLegalTowerPlacement(app, 'b', position):
-        drawCircle(position[0], position[1], size, fill='grey', opacity=app.previewOpacity)
+        drawCircle(position[0], position[1], size, fill='gray', opacity=app.previewOpacity)
     else:
         drawCircle(position[0], position[1], size, fill='red', opacity=app.previewOpacity)
 def drawArcherPreview(app):
@@ -348,13 +367,19 @@ def drawSideMenu(app):
 
     #draw bomb tower
     drawLabel('Press "b" for Bomb', 1100, 300, size=16)
-    drawCircle(1100, 350, BOMB_SIZE, fill='grey', opacity=100)
+    drawCircle(1100, 350, BOMB_SIZE, fill='gray', opacity=100)
 
     #draw archer tower
     drawLabel('Press "a" for Archer', 1100, 450, size=16)
     drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
-def drawTowerUpgrade(app, tower):
+def drawTowerUpgrade(app):
     pass
+def drawGameOver(app):
+    drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+    drawLabel('GAME OVER!', app.width/2, app.height/2-100, size=100)
+
+    restartButton = Button(app.width/2-50, app.height/2, app.width/2+50, app.height/2+50, 'Endless', pressRestartEndless, app.fillHover, app.fillNorm)
+    drawRect(app.width/2-50, app.height/2, 100, 50, fill=restartButton.getFill(), border='black')
 
 def redrawAll(app):
     if app.loaded:
@@ -378,6 +403,11 @@ def redrawAll(app):
             
             #upgrade tower menu
             if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
+            
+            if app.paused: drawPauseMenu(app) #IMPLEMENT
+
+            #game over
+            if app.gameOver: drawGameOver(app)
 
 def mouseInSideMenu(app):
     return (1000 <= app.mouseLocation[0] <= 1200) and (0 <= app.mouseLocation[1] <= 800)
@@ -401,6 +431,8 @@ def pressEndless(app):
 def pressMapEditor(app): 
     app.scene = 'Map Editor'
     app.loaded = False
+def pressRestartEndless(app):
+    loadEndless(app)
 #end button functions
 
 def onKeyPress(app, keys):
@@ -426,8 +458,7 @@ def onKeyRelease(app, keys):
             app.showingRange = False
 
 def onMouseMove(app, mouseX, mouseY):
-    if app.scene in app.levels:
-        app.mouseLocation = (mouseX, mouseY)
+    app.mouseLocation = (mouseX, mouseY)
 
 def onMousePress(app, mouseX, mouseY):
     #check buttons
