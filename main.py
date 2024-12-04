@@ -11,9 +11,9 @@ from load import *
 
 def onAppStart(app):
     app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
-    app.levels = ['Endless']
+    app.levels = ['Endless', 'Tutorial']
 
-    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless}
+    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless, 'Tutorial': loadTutorial}
     
     app.stepsPerSecond = 60
     app.loaded = False
@@ -22,6 +22,7 @@ def onAppStart(app):
     app.mouseLocation = (0,0)
     app.fillHover = 'gray'
     app.fillNorm = 'black'
+    app.doneTutorial = False
 
     restart(app)
 
@@ -64,6 +65,21 @@ def loadEndless(app):
     app.waves = ENDLESS_WAVES
     app.wave = 0
     app.lastSpawn = 0
+    loadLevel(app)
+    app.loaded = True
+def loadTutorial(app):
+    app.width = 1200
+    app.height = 800
+    app.money = 1000
+    app.map = TUTORIAL_MAP
+    app.waves = TUTORIAL_WAVES
+    app.wave = 0
+    app.lastSpawn = 0
+
+    app.welcomeTxt = False
+    app.pathExpTxt = False
+    app.placedTower = False
+
     loadLevel(app)
     app.loaded = True
 def loadLevel(app):
@@ -304,6 +320,37 @@ def drawEndless(app):
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
     
+    drawCircle(75, 75, 50, fill='gold')
+    drawCircle(75, 75, 40, fill='yellow')
+    drawLabel(f'{app.money}', 75, 120)
+
+def drawTutorial(app):
+    drawMap(app)
+
+    for tower in app.towers:
+        towerType = tower.getType()
+        if towerType == 'Magic': drawMagicTower(app, tower, 100)
+        elif towerType == 'Archer': drawArcherTower(app, tower, 100)
+        elif towerType == 'Bomb': drawBombTower(app, tower, 100)
+        if app.showingRange:
+            showRange(app, tower)
+    for enemy in app.enemies:
+        drawEnemy(app, enemy)
+    for projectile in app.projectiles:
+        drawProjectile(app, projectile)
+    
+    if not app.startWave and app.loaded: #wave button
+        startWave = Button(app.startCell[0]*app.cellSize, app.startCell[1]*app.cellSize, app.startCell[0]*app.cellSize+app.cellSize, app.startCell[1]*app.cellSize+app.cellSize, 'Tutorial', pressStartWave, 'crimson', 'fireBrick')
+        checkHover(app, startWave)
+        drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
+
+    #money
+    drawCircle(25, 25, 20, fill='gold')
+    drawCircle(25, 25, 15, fill='yellow')
+    drawLabel(f'{app.money}', 75, 25, size=20)
+
+    #heart
+    drawPolygon()
 
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
@@ -366,7 +413,12 @@ def drawEnemy(app, enemy):
     maxHealth = Enemy.health[enemy.getType()]
     healthRemainingSize = size*2 * (enemy.getHealth()/maxHealth)
     drawRect(topLeft[0], topLeft[1], healthRemainingSize, app.healthBarSize, fill='green')
-    drawCircle(position[0], position[1], size, fill='red')
+    if enemy.getType() == 'Goblin':
+        drawCircle(position[0], position[1], size, fill='red')
+    elif enemy.getType() == 'Purple':
+        drawCircle(position[0], position[1], size, fill='purple')
+    elif enemy.getType() == 'Yellow':
+        drawCircle(position[0], position[1], size, fill='yellow')
 def drawProjectile(app, projectile):
     position = projectile.getPosition()
     size = projectile.getSize()
@@ -427,6 +479,7 @@ def redrawAll(app):
         elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
         elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
         elif app.scene == 'Endless' and app.loaded: drawEndless(app)
+        elif app.scene == 'Tutorial' and app.loaded: drawTutorial(app)
         if app.scene in app.levels:
             #draw side menu
             if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
@@ -442,7 +495,7 @@ def redrawAll(app):
             #upgrade tower menu
             if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
             
-            if app.paused: drawPauseMenu(app) #IMPLEMENT
+            if app.paused: drawPauseMenu(app)
 
             #game over
             if app.gameOver: drawGameOver(app)
@@ -463,9 +516,14 @@ def pressCampaign(app):
     app.loaded = False
     print('pressed campaign')
 def pressEndless(app): 
-    app.scene = 'Endless'
-    app.loaded = False
-    print('pressed endless')
+    if app.doneTutorial:
+        app.scene = 'Endless'
+        app.loaded = False
+        print('pressed endless')
+    else:
+        print('load tutorial')
+        app.scene = 'Tutorial'
+        app.loaded = False
 def pressMapEditor(app): 
     app.scene = 'Map Editor'
     app.loaded = False
