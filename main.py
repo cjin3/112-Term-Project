@@ -62,7 +62,7 @@ def loadEndless(app):
     app.money = 1000
     app.map = ENDLESS_MAP
     app.waves = ENDLESS_WAVES
-    app.wave = ENDLESS_WAVES[0]
+    app.wave = 0
     app.lastSpawn = 0
     loadLevel(app)
     app.loaded = True
@@ -153,19 +153,21 @@ def checkChangeScene(app):
 
 def takeStep(app):
     if app.scene in app.levels:
-        if app.startWave:
-            for i in range(app.lastSpawn, len(app.wave)): #spawn waves
+
+        if app.startWave: #spawn waves
+            wave = app.waves[app.wave]
+            for i in range(app.lastSpawn, len(wave)): 
                 currTime = time.time()
                 if currTime - app.lastSpawnTime >= app.spawnTime:
-                    enemy = app.wave[i]
+                    enemy = wave[i]
                     startLocation = (app.startCell[0] * app.cellSize + app.cellSize/2, app.startCell[1] * app.cellSize + app.cellSize/2)
                     newEnemy = Enemy(enemy, startLocation, startLocation, app.enemyPath)
                     app.lastSpawn += 1
                     app.lastSpawnTime = currTime
                     app.enemies.append(newEnemy)
-                    print(app.lastSpawn)
-                    print(app.enemies)
-            app.startWave = False
+                if app.lastSpawn == len(wave):
+                    app.startWave = False
+                    app.wave += 1
 
 
         for tower in app.towers: #let towers spawn projectiles
@@ -284,12 +286,6 @@ def drawCampaign(app):
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
     drawMap(app)
-    label = 'p for placing towers, e for placing enemies'
-    if app.placement == 'm': label = 'placing magic towers!'
-    elif app.placement == 'a': label = 'placing archer towers!'
-    elif app.placement == 'b': label = 'placing bomb towers!'
-    elif app.placement == 'e': label = 'placing enemies!'
-    drawLabel(label, app.height-100, app.width/2)
 
     for tower in app.towers:
         towerType = tower.getType()
@@ -302,6 +298,11 @@ def drawEndless(app):
         drawEnemy(app, enemy)
     for projectile in app.projectiles:
         drawProjectile(app, projectile)
+    
+    if not app.startWave and app.loaded: #wave button
+        startWave = Button(app.startCell[0]*app.cellSize, app.startCell[1]*app.cellSize, app.startCell[0]*app.cellSize+app.cellSize, app.startCell[1]*app.cellSize+app.cellSize, 'Endless', pressStartWave, 'crimson', 'fireBrick')
+        checkHover(app, startWave)
+        drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
     
 
 def drawMap(app):
@@ -453,6 +454,8 @@ def pressMapEditor(app):
     app.loaded = False
 def pressRestartEndless(app):
     loadEndless(app)
+def pressStartWave(app):
+    app.startWave = True
 #end button functions
 
 def onKeyPress(app, keys):
@@ -502,8 +505,6 @@ def onMousePress(app, mouseX, mouseY):
         elif app.placement == 'a' and app.placingTowers and isLegalTowerPlacement(app, 'a', position) and hasMoney(app, ARCHER_LVL0_COST):
             newTower = Archer('Archer', position, 0)
             app.towers.append(newTower)
-        elif app.placement == 'e':
-            pass
         else:
             app.placingTowers = True
         

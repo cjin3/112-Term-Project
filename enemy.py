@@ -10,7 +10,7 @@ class Enemy:
     parmor = {'Goblin':0}
     marmor = {'Goblin':0}
     size = {'Goblin':10}
-    speed = {'Goblin':5}
+    speed = {'Goblin':1}
     money = {'Goblin':40}
     healthLost = {'Goblin':1}
 
