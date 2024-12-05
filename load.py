@@ -59,6 +59,7 @@ TUTORIAL_MAP = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
 TUTORIAL_WAVE_1 = ['Goblin']
-TUTORIAL_WAVE_2 = ['Goblin','Goblin','Goblin','Goblin']
+TUTORIAL_WAVE_2 = ['Goblin', 'Yellow']
 TUTORIAL_WAVE_3 = ['Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin','Goblin']
-TUTORIAL_WAVES = [TUTORIAL_WAVE_1, TUTORIAL_WAVE_2, TUTORIAL_WAVE_3]
+TUTORIAL_WAVE_4 = ['Purple', 'Purple']
+TUTORIAL_WAVES = [TUTORIAL_WAVE_1, TUTORIAL_WAVE_2, TUTORIAL_WAVE_3, TUTORIAL_WAVE_4]

@@ -36,6 +36,7 @@ def restart(app):
     app.scene = 'Title Page'
     app.paused = False
     app.gameOver = False
+    app.win = False
     app.placement = None    
     loadTitlePage(app)
 def loadTitlePage(app):
@@ -68,6 +69,7 @@ def loadEndless(app):
     app.money = 1000
     app.map = ENDLESS_MAP
     app.waves = ENDLESS_WAVES
+    app.health = 1
     
     loadLevel(app)
     app.loaded = True
@@ -77,13 +79,13 @@ def loadTutorial(app):
     app.money = 1000
     app.map = TUTORIAL_MAP
     app.waves = TUTORIAL_WAVES
-    app.wave = 0
-    app.lastSpawn = 0
+    app.health = 100
 
     app.welcomeTxt = False
     app.waveTxt = False
+    app.enemiesTxt = False
     app.glhf = False
-    app.checkpoints = [app.welcomeTxt, app.waveTxt, app.glhf]
+    app.checkpoints = [app.welcomeTxt, app.waveTxt, app.enemiesTxt, app.glhf]
 
     loadLevel(app)
     app.loaded = True
@@ -105,8 +107,7 @@ def loadLevel(app):
     app.startWave = False
     app.wave = 0
     app.lastSpawn = 0
-
-    app.health = 1
+    app.finalWave = False
 
     #Map
     app.cellSize = 40
@@ -177,6 +178,12 @@ def checkChangeScene(app):
 
 def takeStep(app):
     if app.scene in app.levels:
+        if app.wave >= len(app.waves):
+            app.finalWave = True
+            app.startWave = False
+            if app.enemies == []:
+                app.win = True
+            
 
         if app.startWave: #spawn waves
             wave = app.waves[app.wave]
@@ -191,6 +198,7 @@ def takeStep(app):
                     app.enemies.append(newEnemy)
                 if app.lastSpawn == len(wave):
                     app.startWave = False
+                    app.lastSpawn = 0
                     app.wave += 1
 
 
@@ -323,7 +331,7 @@ def drawEndless(app):
     for projectile in app.projectiles:
         drawProjectile(app, projectile)
     
-    if not app.startWave and app.loaded: #wave button
+    if not app.startWave and app.loaded and not app.finalWave: #wave button
         startWave = Button(app.startCell[0]*app.cellSize, app.startCell[1]*app.cellSize, app.startCell[0]*app.cellSize+app.cellSize, app.startCell[1]*app.cellSize+app.cellSize, 'Endless', pressStartWave, 'crimson', 'fireBrick')
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
@@ -354,6 +362,8 @@ def drawEndless(app):
         #game over
         if app.gameOver: drawGameOver(app)
 
+        if app.win: drawWin(app)
+
 def drawTutorial(app):
     drawMap(app)
     
@@ -369,7 +379,7 @@ def drawTutorial(app):
     for projectile in app.projectiles:
         drawProjectile(app, projectile)
     
-    if not app.startWave and app.loaded: #wave button
+    if not app.startWave and app.loaded and not app.finalWave: #wave button
         startWave = Button(app.startCell[0]*app.cellSize, app.startCell[1]*app.cellSize, app.startCell[0]*app.cellSize+app.cellSize, app.startCell[1]*app.cellSize+app.cellSize, 'Tutorial', pressStartWave, 'crimson', 'fireBrick')
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
@@ -390,6 +400,7 @@ def drawTutorial(app):
 
         #game over
         if app.gameOver: drawGameOver(app)
+        if app.win: drawWin(app)
 
     #money
     drawCircle(25, 25, 20, fill='gold')
@@ -439,6 +450,18 @@ def drawTutorialStory(app):
         drawLabel(f'Press here to spawn enemies!', 90, 8*app.cellSize, fill=fillColor)
     
     elif not app.checkpoints[2]:
+        drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+        gap = 50
+        drawLabel(f'There are different kinds of enemies:', app.width/2, app.height/2-2*gap, size=30, fill=fillColor)
+        
+        drawCircle(app.width/2, app.height/2, Enemy.size['Goblin'], fill='red')
+        drawLabel('Red is the basic enemy', app.width/2, app.height/2+50, size=16, fill=fillColor)
+        drawCircle(app.width/2-350, app.height/2, Enemy.size['Purple'], fill='purple')
+        drawLabel('Purple has lots of health and takes less damage from physical', app.width/2-350, app.height/2+50, size=16, fill=fillColor)
+        drawCircle(app.width/2+350, app.height/2, Enemy.size['Yellow'], fill='yellow')
+        drawLabel('Yellow moves fast and takes less damage from magic', app.width/2+350, app.height/2+50, size=16, fill=fillColor)
+
+    elif not app.checkpoints[3]:
         drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
         gap = 50
         drawLabel(f'Good luck and have fun!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
@@ -540,26 +563,39 @@ def drawSideMenu(app):
     drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
 def drawTowerUpgrade(app):
     pass
-def drawGameOver(app):
+def drawGameOver(app, scene):
     drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
     drawLabel('GAME OVER!', app.width/2, app.height/2-100, size=100)
 
-    restartButton = Button(app.width/2-100, app.height/2, app.width/2+100, app.height/2+100, 'Endless', pressRestartEndless, app.fillHover, app.fillNorm)
+    restartButton = Button(app.width/2-100, app.height/2, app.width/2+100, app.height/2+100, app.scene, pressRestartEndless, app.fillHover, app.fillNorm)
     checkHover(app, restartButton)
     drawRect(app.width/2-100, app.height/2, 200, 100, fill=restartButton.getFill(), border=app.fillNorm)
     drawLabel('RESTART', app.width/2, app.height/2+50, size=20, fill=app.buttonTextFill)
 
-    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, 'Endless', pressMainMenuEndless, app.fillHover, app.fillNorm)
+    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, app.scene, pressMainMenuEndless, app.fillHover, app.fillNorm)
     checkHover(app, mainMenuButton)
     drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
     drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
-def drawPauseMenu(app):
+def drawPauseMenu(app, scene):
     drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
     drawLabel('Paused', app.width/2, app.height/2-100, size=100)
 
     drawLabel('Press "p" to unpause', app.width/2, app.height/2+50, size=50)
 
-    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, 'Endless', pressMainMenuEndless, app.fillHover, app.fillNorm)
+    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, app.scene, pressMainMenuEndless, app.fillHover, app.fillNorm)
+    checkHover(app, mainMenuButton)
+    drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
+    drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
+def drawWin(app):
+    drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+    drawLabel('YOU WIN!', app.width/2, app.height/2-100, size=100)
+
+    restartButton = Button(app.width/2-100, app.height/2, app.width/2+100, app.height/2+100, app.scene, pressRestartEndless, app.fillHover, app.fillNorm)
+    checkHover(app, restartButton)
+    drawRect(app.width/2-100, app.height/2, 200, 100, fill=restartButton.getFill(), border=app.fillNorm)
+    drawLabel('RESTART', app.width/2, app.height/2+50, size=20, fill=app.buttonTextFill)
+
+    mainMenuButton = Button(app.width/2-100, app.height/2+150, app.width/2+100, app.height/2+250, app.scene, pressMainMenuEndless, app.fillHover, app.fillNorm)
     checkHover(app, mainMenuButton)
     drawRect(app.width/2-100, app.height/2+150, 200, 100, fill=mainMenuButton.getFill(), border=app.fillNorm)
     drawLabel('MAIN MENU', app.width/2, app.height/2+200, size=20, fill=app.buttonTextFill)
