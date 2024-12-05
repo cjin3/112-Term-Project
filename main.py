@@ -919,7 +919,7 @@ def pressSaveButton(app):
         app.showMessage('No legal enemy path or multiple paths')
         
 #end button functions
-def parseMap(map): #TAKEN FROM 
+def parseMap(map): #TAKEN FROM https://github.com/vixu8/hack112, main.py, lines 473 to 484, hack112 project
     returnMap = []
     map = map.strip('[[')
     map = map.strip(']]')
