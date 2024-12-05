@@ -10,6 +10,7 @@ from projectile import *
 from load import *
 
 def onAppStart(app):
+    app.title = 'TBD'
     app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
     app.levels = ['Endless', 'Tutorial']
 
@@ -24,8 +25,12 @@ def onAppStart(app):
     app.fillNorm = 'black'
     app.doneTutorial = False
 
+    loadImages(app)
     restart(app)
 
+def loadImages(app):
+    app.heart = 'heart.png'
+    app.arrow = 'arrow.png'
 def restart(app):
     app.prevScene = 'Title Page'
     app.scene = 'Title Page'
@@ -63,8 +68,7 @@ def loadEndless(app):
     app.money = 1000
     app.map = ENDLESS_MAP
     app.waves = ENDLESS_WAVES
-    app.wave = 0
-    app.lastSpawn = 0
+    
     loadLevel(app)
     app.loaded = True
 def loadTutorial(app):
@@ -77,8 +81,9 @@ def loadTutorial(app):
     app.lastSpawn = 0
 
     app.welcomeTxt = False
-    app.pathExpTxt = False
-    app.placedTower = False
+    app.waveTxt = False
+    app.glhf = False
+    app.checkpoints = [app.welcomeTxt, app.waveTxt, app.glhf]
 
     loadLevel(app)
     app.loaded = True
@@ -98,6 +103,8 @@ def loadLevel(app):
     app.lastSpawnTime = 0
     app.spawnTime = 0.5
     app.startWave = False
+    app.wave = 0
+    app.lastSpawn = 0
 
     app.health = 1
 
@@ -151,6 +158,7 @@ def isLegalCell(app, position):
 
 def onStep(app):
     checkChangeScene(app)
+
     if not app.paused and not app.gameOver:
         takeStep(app)
 
@@ -320,13 +328,35 @@ def drawEndless(app):
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
     
-    drawCircle(75, 75, 50, fill='gold')
-    drawCircle(75, 75, 40, fill='yellow')
-    drawLabel(f'{app.money}', 75, 120)
+    #money
+    drawCircle(25, 25, 20, fill='gold')
+    drawCircle(25, 25, 15, fill='yellow')
+    drawLabel(f'{app.money}', 75, 25, size=20)
+
+    #heart
+    drawImage(app.heart, 0, 50, width=50, height=50)
+    drawLabel(f'{app.health}', 75, 75, size=20)
+
+    #draw side menu
+    if not app.paused:
+        if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
+        #previews
+        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+
+        #need more money label
+        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+        
+        #upgrade tower menu
+        if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
+
+        #game over
+        if app.gameOver: drawGameOver(app)
 
 def drawTutorial(app):
     drawMap(app)
-
+    
     for tower in app.towers:
         towerType = tower.getType()
         if towerType == 'Magic': drawMagicTower(app, tower, 100)
@@ -344,13 +374,76 @@ def drawTutorial(app):
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
 
+    #draw side menu
+    if not app.paused:
+        if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
+        #previews
+        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+
+        #need more money label
+        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+        
+        #upgrade tower menu
+        if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
+
+        #game over
+        if app.gameOver: drawGameOver(app)
+
     #money
     drawCircle(25, 25, 20, fill='gold')
     drawCircle(25, 25, 15, fill='yellow')
     drawLabel(f'{app.money}', 75, 25, size=20)
 
     #heart
-    drawPolygon()
+    drawImage(app.heart, 0, 50, width=50, height=50)
+    drawLabel(f'{app.health}', 75, 75, size=20)
+
+    drawTutorialStory(app)
+
+def drawTutorialStory(app):
+    fillColor = 'aqua'
+    if not app.checkpoints[0]:
+        
+        drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+        gap = 50
+        drawLabel(f'Welcome to {app.title}!', app.width/2, app.height/2-gap*5, size=50, fill=fillColor)
+        drawLabel(f'{app.title} is a tower defense game!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
+        drawLabel(f'Enemies spawn at the red circle.', app.width/2, app.height/2+gap, size=30, fill=fillColor)
+        drawLabel(f'Prevent them from getting to the end with towers!', app.width/2, app.height/2+2*gap, size=30, fill=fillColor)
+        drawLabel(f'If enemies reach the end, you lose health', app.width/2, app.height/2+3*gap, size=30, fill=fillColor)
+        drawLabel(f'If you have no more health, you lose the game!', app.width/2, app.height/2+4*gap, size=30, fill=fillColor)
+
+        drawImage(app.arrow, 50, 9*app.cellSize)
+        drawLabel(f'Enemies spawn here!', 75, 8*app.cellSize, fill=fillColor)
+
+        drawImage(app.arrow, 27*app.cellSize, 9*app.cellSize, rotateAngle=180)
+        drawLabel(f'Stop enemies from getting here!', 27*app.cellSize, 8*app.cellSize, fill=fillColor)
+
+        drawImage(app.arrow, 90, 1.5*app.cellSize)
+        drawLabel(f'Your health', 120, 2.5*app.cellSize, fill=fillColor)
+    
+    elif not app.checkpoints[1]:
+        drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+        gap = 50
+        drawLabel(f'You can use money to place towers.', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
+        drawLabel(f'Enemies drop money upon defeat.', app.width/2, app.height/2+1*gap, size=30, fill=fillColor)
+        drawLabel(f'Place towers by clicking anywhere on the map.', app.width/2, app.height/2+2*gap, size=30, fill=fillColor)
+        drawLabel(f'Press the red button to spawn the next wave of enemies!', app.width/2, app.height/2+3*gap, size=30, fill=fillColor)
+
+        drawImage(app.arrow, 90, 0.5*app.cellSize)
+        drawLabel(f'Your money', 120, 1.5*app.cellSize, fill=fillColor)
+
+        drawImage(app.arrow, 50, 9*app.cellSize)
+        drawLabel(f'Press here to spawn enemies!', 90, 8*app.cellSize, fill=fillColor)
+    
+    elif not app.checkpoints[2]:
+        drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
+        gap = 50
+        drawLabel(f'Good luck and have fun!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
+        
+
 
 def drawMap(app):
     rows, cols = len(app.map), len(app.map[0])
@@ -479,26 +572,7 @@ def redrawAll(app):
         elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
         elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
         elif app.scene == 'Endless' and app.loaded: drawEndless(app)
-        elif app.scene == 'Tutorial' and app.loaded: drawTutorial(app)
-        if app.scene in app.levels:
-            #draw side menu
-            if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
-
-            #previews
-            if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
-            elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
-            elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
-
-            #need more money label
-            if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
-            
-            #upgrade tower menu
-            if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
-            
-            if app.paused: drawPauseMenu(app)
-
-            #game over
-            if app.gameOver: drawGameOver(app)
+        elif app.scene == 'Tutorial' and app.loaded: drawTutorial(app)            
 
 def mouseInSideMenu(app):
     return (1000 <= app.mouseLocation[0] <= 1200) and (0 <= app.mouseLocation[1] <= 800)
@@ -565,11 +639,20 @@ def onMouseMove(app, mouseX, mouseY):
 
 def onMousePress(app, mouseX, mouseY):
     #check buttons
+    if app.scene == 'Tutorial':
+        for i in range(len(app.checkpoints)):
+            if not app.checkpoints[i]:
+                app.checkpoints[i] = True
+                if app.paused: 
+                    app.paused = False
+                return
+
     for location in Button.buttonLocations.keys():
         if (app.scene == location[2]) and (location[0][0] <= mouseX <= location[1][0]) and (location[0][1] <= mouseY <= location[1][1]): #clicked button
             clicked = Button.buttonLocations[location]
             Button.buttonFunctions[clicked](app)
             return
+                
     if app.scene in app.levels:
         position = (mouseX, mouseY)
         app.mouseLocation = position
