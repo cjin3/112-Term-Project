@@ -182,6 +182,8 @@ def takeStep(app):
             app.finalWave = True
             app.startWave = False
             if app.enemies == []:
+                if app.scene == 'Tutorial' and app.doneTutorial == False:
+                    app.doneTutorial = True
                 app.win = True
             
 
@@ -553,14 +555,18 @@ def drawSideMenu(app):
     #draw magic tower
     drawLabel('Press "m" for Magic', 1100, 150, size=16)
     drawCircle(1100, 200, MAGIC_SIZE, fill='lightBlue', opacity=100)
+    drawLabel('200 coin', 1100, 200)
 
     #draw bomb tower
     drawLabel('Press "b" for Bomb', 1100, 300, size=16)
     drawCircle(1100, 350, BOMB_SIZE, fill='gray', opacity=100)
+    drawLabel('320 coin', 1100, 350)
 
     #draw archer tower
     drawLabel('Press "a" for Archer', 1100, 450, size=16)
     drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
+    drawLabel('280 coin', 1100, 500)
+
 def drawTowerUpgrade(app):
     pass
 def drawGameOver(app, scene):
@@ -638,8 +644,12 @@ def pressMapEditor(app):
     app.scene = 'Map Editor'
     app.loaded = False
 def pressRestartEndless(app):
-    loadEndless(app)
+    if app.scene == 'Tutorial':
+        loadTutorial(app)
+    elif app.scene == 'Endless':
+        loadEndless(app)
     app.gameOver = False
+    app.win = False
     print(app.enemies)
     print(app.gameOver)
 def pressStartWave(app):
