@@ -10,7 +10,7 @@ from projectile import *
 from load import *
 
 def onAppStart(app):
-    app.title = 'TBD'
+    app.titleName = 'TBD'
     app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
     app.levels = ['Endless', 'Tutorial']
 
@@ -25,12 +25,18 @@ def onAppStart(app):
     app.fillNorm = 'black'
     app.doneTutorial = False
 
+    app.smallRadius = 15
+    app.largeRadius = 25
+
     loadImages(app)
     restart(app)
 
 def loadImages(app):
     app.heart = 'heart.png'
     app.arrow = 'arrow.png'
+    app.bricks = 'brick.png'
+    app.title = 'title.png'
+    app.torch = 'torch.png'
 def restart(app):
     app.prevScene = 'Title Page'
     app.scene = 'Title Page'
@@ -276,48 +282,81 @@ def outOfBoard(app, projectile):
     location = projectile.getPosition()
     return (0 > location[0] or location[0] > app.width) or (0 > location[1] or location[1] > app.height)
 
+def getRandomRadius(app, type):
+    randomint = random.randint(10,20)
+    if type == 'small':
+        if randomint%2:
+            app.smallRadius += 1
+        else:
+            app.smallRadius -= 1
+    elif type == 'large':
+        if randomint%2:
+            app.largeRadius += 1
+        else:
+            app.largeRadius -= 1
+    return
+
+def drawBackGround(app):
+    drawRect(0, 0, app.width, app.height, fill=gradient('silver', 'dimGray', start='center'))
+    drawImage(app.bricks, 200, 130, width=200, height=200)
+    drawImage(app.bricks, 1020, 450, width=200, height=200)
+    drawImage(app.bricks, 700, 50, rotateAngle=180, width=200, height=200)
+    width, height = getImageSize(app.torch)
+    #drawImage(app.torch, 150, 300)
+    #drawImage(app.torch, 1000, 300)
+    #drawCircle(150+width/2, 300-height/2+30, random.randint(20,30), fill='red')
+    #drawCircle(150+width/2, 300-height/2+30, random.randint(10,20), fill='yellow')
 def drawTitlePage(app):
-    drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
+    drawBackGround(app)
+    height, width = getImageSize(app.title)
+    drawImage(app.title, app.width/2-width-85, app.height/2-200)
 
     #Play button
     buttonWidth = 200
     buttonHeight = 100
-    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay, app.fillHover, app.fillNorm)
+    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2+150, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2+150, 'Title Page', pressPlay, app.fillHover, app.fillNorm)
     checkHover(app, playButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=playButton.getFill(), border=app.fillNorm)
-    drawLabel('PLAY', app.width/2, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2+150, buttonWidth, buttonHeight, fill=playButton.getFill(), border=app.fillNorm)
+    drawLabel('PLAY', app.width/2, app.height/2+150, fill=app.buttonTextFill)
 
     #Load button
-    buttonWidth = 200
-    buttonHeight = 100
-    gap = 150
-    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad, app.fillHover, app.fillNorm)
-    checkHover(app, loadButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
-    drawLabel('LOAD', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
+    
 def drawGameMenu(app):
+    drawBackGround(app)
+
+    drawLabel('SELECT A GAMEMODE:', app.width/2, app.height/2-200, fill='white', size=60)
+
     #Campaign button
     buttonWidth = 250
-    buttonHeight = 500
-    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, app.width/2, app.height/2+buttonHeight/2,  'Game Menu', pressCampaign, app.fillHover, app.fillNorm)
+    buttonHeight = 300
+    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, app.width/2-100, app.height/2+buttonHeight/2+100,  'Game Menu', pressCampaign, app.fillHover, app.fillNorm)
     checkHover(app, campaignButton)
-    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=campaignButton.getFill(), border=app.fillNorm )
-    drawLabel('Campaign', app.width/2-buttonWidth/2-100, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=campaignButton.getFill(), border=app.fillNorm )
+    drawLabel('Play', app.width/2-buttonWidth/2-100, app.height/2+100, fill=app.buttonTextFill)
 
     #Map Editor button
     buttonWidth = 250
-    buttonHeight = 500
-    mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor, app.fillHover, app.fillNorm)
+    buttonHeight = 300
+    mapEditorButton = Button(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, app.width/2+350, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor, app.fillHover, app.fillNorm)
     checkHover(app, mapEditorButton)
-    drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill='white')
-    drawLabel('Map Editor', app.width/2+buttonWidth/2, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=mapEditorButton.getFill(), border=app.fillNorm)
+    drawLabel('Map Editor', app.width/2-buttonWidth/2+350, app.height/2+100, fill=app.buttonTextFill)
 def drawCampaign(app):
+    drawBackGround(app)
     buttonWidth = 500
     buttonHeight = 500
     endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless, app.fillHover, app.fillNorm)
     checkHover(app, endlessButton)
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
+
+    buttonWidth = 200
+    buttonHeight = 100
+    gap = 150
+    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad, app.fillHover, app.fillNorm)
+    checkHover(app, loadButton)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
+    drawLabel('Load a level', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
 def drawEndless(app):
     drawMap(app)
 
@@ -421,8 +460,8 @@ def drawTutorialStory(app):
         
         drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
         gap = 50
-        drawLabel(f'Welcome to {app.title}!', app.width/2, app.height/2-gap*5, size=50, fill=fillColor)
-        drawLabel(f'{app.title} is a tower defense game!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
+        drawLabel(f'Welcome to {app.titleName}!', app.width/2, app.height/2-gap*5, size=50, fill=fillColor)
+        drawLabel(f'{app.titleName} is a tower defense game!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
         drawLabel(f'Enemies spawn at the red circle.', app.width/2, app.height/2+gap, size=30, fill=fillColor)
         drawLabel(f'Prevent them from getting to the end with towers!', app.width/2, app.height/2+2*gap, size=30, fill=fillColor)
         drawLabel(f'If enemies reach the end, you lose health', app.width/2, app.height/2+3*gap, size=30, fill=fillColor)
@@ -467,7 +506,6 @@ def drawTutorialStory(app):
         drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
         gap = 50
         drawLabel(f'Good luck and have fun!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
-        
 
 
 def drawMap(app):
