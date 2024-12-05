@@ -4,9 +4,9 @@ import copy
 
 
 class Projectile:
-    PROJECTILE_SPEED_M = {0:4, 1:4, 2:5}
-    PROJECTILE_SPEED_B = {0:1, 1:2, 2:2}
-    PROJECTILE_SPEED_A = {0:3, 1:4, 2:5}
+    PROJECTILE_SPEED_M = {0:12, 1:16, 2:20}
+    PROJECTILE_SPEED_B = {0:8, 1:2, 2:2}
+    PROJECTILE_SPEED_A = {0:16, 1:16, 2:20}
 
     PROJECTILE_SIZE_M = {0:3, 1:3, 2:3}
     PROJECTILE_SIZE_B = {0:7, 1:7, 2:8}

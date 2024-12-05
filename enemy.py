@@ -6,13 +6,13 @@ cellSize = 40
 
 class Enemy:
     instance = {}
-    health = {'Goblin':100}
-    parmor = {'Goblin':0}
-    marmor = {'Goblin':0}
-    size = {'Goblin':10}
-    speed = {'Goblin':1}
-    money = {'Goblin':40}
-    healthLost = {'Goblin':1}
+    health = {'Goblin':100, 'Yellow':60, 'Purple':300}
+    parmor = {'Goblin':0, 'Yellow':0, 'Purple':10}
+    marmor = {'Goblin':0, 'Yellow':5, 'Purple':0}
+    size = {'Goblin':10, 'Yellow':7, 'Purple':15}
+    speed = {'Goblin':1, 'Yellow':2, 'Purple':0.5}
+    money = {'Goblin':40, 'Yellow':30, 'Purple':200}
+    healthLost = {'Goblin':1, 'Yellow':1, 'Purple':10}
 
     def __init__(self, type, position, startCell, enemyPath) -> None:
         self.type = type
