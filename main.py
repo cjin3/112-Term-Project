@@ -343,20 +343,23 @@ def drawGameMenu(app):
     drawLabel('Map Editor', app.width/2-buttonWidth/2+350, app.height/2+100, fill=app.buttonTextFill)
 def drawCampaign(app):
     drawBackGround(app)
-    buttonWidth = 500
-    buttonHeight = 500
+    buttonWidth = 200
+    buttonHeight = 300
+
+    tutorialButton = Button(app.width/2-buttonWidth/2-400, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2-400, app.height/2+buttonHeight/2, 'Campaign', pressTutorial, app.fillHover, app.fillNorm)
+    checkHover(app, tutorialButton)
+    drawRect(app.width/2-buttonWidth/2-400, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=tutorialButton.getFill(), border=app.fillNorm)
+    drawLabel('Tutorial', app.width/2-400, app.height/2, fill=app.buttonTextFill)
+
     endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless, app.fillHover, app.fillNorm)
     checkHover(app, endlessButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=endlessButton.getFill(), border=app.fillNorm)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
-
-    buttonWidth = 200
-    buttonHeight = 100
-    gap = 150
-    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad, app.fillHover, app.fillNorm)
+    
+    loadButton = Button(app.width/2-buttonWidth/2+400, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2+400, app.height/2+buttonHeight/2, 'Campaign', pressLoad, app.fillHover, app.fillNorm)
     checkHover(app, loadButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
-    drawLabel('Load a level', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth/2+400, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
+    drawLabel('Load a level', app.width/2+400, app.height/2, fill=app.buttonTextFill)
 def drawEndless(app):
     drawMap(app)
 
@@ -663,8 +666,12 @@ def pressPlay(app):
     app.loaded = False
     print('pressed play')
 def pressLoad(app): 
-    app.scene = "Load Menu"
-    app.loaded = False
+    if app.doneTutorial:
+        app.scene = "Load Menu"
+        app.loaded = False
+        print('pressed load')
+    else:
+        app.showMessage('Play the tutorial first!')
 def pressCampaign(app): 
     app.scene = 'Campaign'
     app.loaded = False
@@ -675,9 +682,7 @@ def pressEndless(app):
         app.loaded = False
         print('pressed endless')
     else:
-        print('load tutorial')
-        app.scene = 'Tutorial'
-        app.loaded = False
+        app.showMessage('Play the tutorial first!')
 def pressMapEditor(app): 
     app.scene = 'Map Editor'
     app.loaded = False
@@ -694,6 +699,10 @@ def pressStartWave(app):
     app.startWave = True
 def pressMainMenuEndless(app):
     restart(app)
+def pressTutorial(app):
+    app.scene = 'Tutorial'
+    app.loaded = False
+    print('current scene: Tutorial')
 #end button functions
 
 def onKeyPress(app, keys):
