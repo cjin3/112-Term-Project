@@ -10,11 +10,12 @@ from projectile import *
 from load import *
 
 def onAppStart(app):
-    app.title = 'TBD'
+    print(time.time())
+    app.titleName = 'TBD'
     app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
-    app.levels = ['Endless', 'Tutorial']
+    app.levels = ['Endless', 'Tutorial', 'Load']
 
-    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless, 'Tutorial': loadTutorial}
+    app.loadingDict = {'Title Page': loadTitlePage, 'Game Menu': loadGameMenu, 'Map Editor': loadMapEditor, 'Campaign': loadCampaign, 'Load Menu': loadLoadMenu, 'Endless': loadEndless, 'Tutorial': loadTutorial, 'Load': loadLoad}
     
     app.stepsPerSecond = 60
     app.loaded = False
@@ -25,12 +26,23 @@ def onAppStart(app):
     app.fillNorm = 'black'
     app.doneTutorial = False
 
-    loadImages(app)
-    restart(app)
+    app.smallRadius = 15
+    app.largeRadius = 25
 
+    app.cellSize = 40
+
+    loadImages(app)
+    loadFiles(app)
+    restart(app)
+def loadFiles(app):
+    app.save1 = 'save1.txt'
+    app.save2 = 'save2.txt'
 def loadImages(app):
     app.heart = 'heart.png'
     app.arrow = 'arrow.png'
+    app.bricks = 'brick.png'
+    app.title = 'title.png'
+    app.torch = 'torch.png'
 def restart(app):
     app.prevScene = 'Title Page'
     app.scene = 'Title Page'
@@ -52,8 +64,14 @@ def loadGameMenu(app):
     app.buttonTextFill = 'white'
     app.loaded = True
 def loadMapEditor(app):
-    app.width = 1200
+    app.map = MAP_EDITOR_MAP
+    app.width = 1500
     app.height = 800
+
+    app.selectedBlock = None
+
+    app.startCell = None
+    app.endCell = None
     app.loaded = True
 def loadCampaign(app):
     app.width = 1200
@@ -116,6 +134,15 @@ def loadLevel(app):
     app.enemyPath = []
     loadMap(app)
     loadEnemyPath(app)
+def loadLoad(app):
+    app.width = 1200
+    app.height = 800
+    app.money = 1000
+    app.waves = ENDLESS_WAVES
+    app.health = 1
+    
+    loadLevel(app)
+    app.loaded = True
 
 def loadMap(app):
     rows, cols = len(app.map), len(app.map[0])
@@ -177,6 +204,12 @@ def checkChangeScene(app):
         print(f'current scene: {app.scene}')
 
 def takeStep(app):
+    if app.scene == 'Map Editor':
+        if findStart(app, app.map) and app.selectedBlock == 'S':
+            app.selectedBlock = None
+        if findEnd(app, app.map) and app.selectedBlock == 'E':
+            app.selectedBlock = None
+
     if app.scene in app.levels:
         if app.wave >= len(app.waves):
             app.finalWave = True
@@ -275,49 +308,222 @@ def inRange(enemy, tower):
 def outOfBoard(app, projectile):
     location = projectile.getPosition()
     return (0 > location[0] or location[0] > app.width) or (0 > location[1] or location[1] > app.height)
+def findEnd(app, map):
+    rows, cols = len(map), len(map[0])
+    for row in range(rows):
+        for col in range(cols):
+            if map[row][col] == 'E':
+                return True
+    return False
+def findStart(app, map):
+    rows, cols = len(map), len(map[0])
+    for row in range(rows):
+        for col in range(cols):
+            if map[row][col] == 'S':
+                return True
+    return False
 
+def getRandomRadius(app, type):
+    randomint = random.randint(10,20)
+    if type == 'small':
+        if randomint%2:
+            app.smallRadius += 1
+        else:
+            app.smallRadius -= 1
+    elif type == 'large':
+        if randomint%2:
+            app.largeRadius += 1
+        else:
+            app.largeRadius -= 1
+    return
+def drawBackGround(app):
+    drawRect(0, 0, app.width, app.height, fill=gradient('silver', 'dimGray', start='center'))
+    drawImage(app.bricks, 200, 130, width=200, height=200)
+    drawImage(app.bricks, 1020, 450, width=200, height=200)
+    drawImage(app.bricks, 700, 50, rotateAngle=180, width=200, height=200)
+    width, height = getImageSize(app.torch)
+    drawImage(app.torch, 150, 300)
+    drawImage(app.torch, 1000, 300)
+    smallRadius1, smallRadius2, bigRadius1, bigRadius2 = 10, 10, 10, 10
+
+    if int(time.time()) % 2 == 0: 
+        smallRadius1 = 12 + random.randint(0, 2)
+        smallRadius2 = 15 + random.randint(0, 2)
+        bigRadius1 = 28 -  random.randint(0, 2)
+        bigRadius2 = 22 + random.randint(0, 2)
+    elif int(time.time()) % 2 == 1:
+        smallRadius1 = 20 - random.randint(0, 2)
+        smallRadius2 = 13 + random.randint(0, 2)
+        bigRadius1 = 25 +  random.randint(0, 2)
+        bigRadius2 = 27 - random.randint(0, 2)
+    drawCircle(150+width/2, 300-height/2+30, bigRadius1, fill='red')
+    drawCircle(150+width/2, 300-height/2+30, smallRadius1, fill='yellow')
+    drawCircle(1000+width/2, 300-height/2+30, bigRadius2, fill='red')
+    drawCircle(1000+width/2, 300-height/2+30, smallRadius2, fill='yellow')
 def drawTitlePage(app):
-    drawLabel("TITLE", app.width/2, app.height/2-150, size=100)
+    drawBackGround(app)
+    height, width = getImageSize(app.title)
+    drawImage(app.title, app.width/2-width-85, app.height/2-200)
 
     #Play button
     buttonWidth = 200
     buttonHeight = 100
-    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Title Page', pressPlay, app.fillHover, app.fillNorm)
+    playButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2+150, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2+150, 'Title Page', pressPlay, app.fillHover, app.fillNorm)
     checkHover(app, playButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=playButton.getFill(), border=app.fillNorm)
-    drawLabel('PLAY', app.width/2, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2+150, buttonWidth, buttonHeight, fill=playButton.getFill(), border=app.fillNorm)
+    drawLabel('PLAY', app.width/2, app.height/2+150, fill=app.buttonTextFill)
 
     #Load button
-    buttonWidth = 200
-    buttonHeight = 100
-    gap = 150
-    loadButton = Button(app.width/2-buttonHeight/2, app.height/2-buttonHeight/2 + gap, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2 + gap, 'Title Page', pressLoad, app.fillHover, app.fillNorm)
-    checkHover(app, loadButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2 + gap, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
-    drawLabel('LOAD', app.width/2, app.height/2 + gap, fill=app.buttonTextFill)
 def drawGameMenu(app):
+    drawBackGround(app)
+
+    drawLabel('SELECT A GAMEMODE:', app.width/2, app.height/2-200, fill='white', size=60)
+
     #Campaign button
     buttonWidth = 250
-    buttonHeight = 500
-    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, app.width/2, app.height/2+buttonHeight/2,  'Game Menu', pressCampaign, app.fillHover, app.fillNorm)
+    buttonHeight = 300
+    campaignButton = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, app.width/2-100, app.height/2+buttonHeight/2+100,  'Game Menu', pressCampaign, app.fillHover, app.fillNorm)
     checkHover(app, campaignButton)
-    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=campaignButton.getFill(), border=app.fillNorm )
-    drawLabel('Campaign', app.width/2-buttonWidth/2-100, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=campaignButton.getFill(), border=app.fillNorm )
+    drawLabel('Play', app.width/2-buttonWidth/2-100, app.height/2+100, fill=app.buttonTextFill)
 
     #Map Editor button
     buttonWidth = 250
-    buttonHeight = 500
-    mapEditorButton = Button(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, app.width/2+2*buttonWidth, app.height/2+buttonHeight/2, 'Game Menu', pressMapEditor, app.fillHover, app.fillNorm)
+    buttonHeight = 300
+    mapEditorButton = Button(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, app.width/2+350, app.height/2+buttonHeight/2+100, 'Game Menu', pressMapEditor, app.fillHover, app.fillNorm)
     checkHover(app, mapEditorButton)
-    drawRect(app.width/2+buttonWidth+100, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill='white')
-    drawLabel('Map Editor', app.width/2+buttonWidth/2, app.height/2, fill=app.buttonTextFill)
+    drawRect(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=mapEditorButton.getFill(), border=app.fillNorm)
+    drawLabel('Map Editor', app.width/2-buttonWidth/2+350, app.height/2+100, fill=app.buttonTextFill)
 def drawCampaign(app):
-    buttonWidth = 500
-    buttonHeight = 500
+    drawBackGround(app)
+    buttonWidth = 200
+    buttonHeight = 300
+
+    tutorialButton = Button(app.width/2-buttonWidth/2-400, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2-400, app.height/2+buttonHeight/2, 'Campaign', pressTutorial, app.fillHover, app.fillNorm)
+    checkHover(app, tutorialButton)
+    drawRect(app.width/2-buttonWidth/2-400, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=tutorialButton.getFill(), border=app.fillNorm)
+    drawLabel('Tutorial', app.width/2-400, app.height/2, fill=app.buttonTextFill)
+
     endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless, app.fillHover, app.fillNorm)
     checkHover(app, endlessButton)
-    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=app.buttonFill)
+    drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=endlessButton.getFill(), border=app.fillNorm)
     drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
+    
+    loadButton = Button(app.width/2-buttonWidth/2+400, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2+400, app.height/2+buttonHeight/2, 'Campaign', pressLoad, app.fillHover, app.fillNorm)
+    checkHover(app, loadButton)
+    drawRect(app.width/2-buttonWidth/2+400, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=loadButton.getFill(), border=app.fillNorm)
+    drawLabel('Load a level', app.width/2+400, app.height/2, fill=app.buttonTextFill)
+def drawMapEditor(app):
+    drawMap(app)
+    drawRect(1200, 0, 300, app.height, fill='brown')
+    buttonWidth = 100
+    buttonHeight = 100
+
+    #Select 'end'
+    if not findEnd(app, app.map):
+        selectEndButton = Button(1350-buttonWidth/2, 100-buttonHeight/2, 1350+buttonWidth/2, 100+buttonHeight/2, 'Map Editor', pressSelectEndButton, app.fillHover, 'tan')
+        checkHover(app, selectEndButton)
+        drawRect(1350-buttonWidth/2, 100-buttonHeight/2, buttonWidth, buttonHeight, fill=selectEndButton.getFill(), border='tan')
+        drawLabel('Select End', 1350, 100, fill=app.buttonTextFill)
+
+    #Select 'Start'
+    if not findStart(app, app.map):
+        selectStartButton = Button(1350-buttonWidth/2, 100-buttonHeight/2, 1350+buttonWidth/2, 100+buttonHeight/2, 'Map Editor', pressSelectStartButton, app.fillHover, 'tan')
+        checkHover(app, selectStartButton)
+        drawRect(1350-buttonWidth/2, 100-buttonHeight/2, buttonWidth, buttonHeight, fill=selectStartButton.getFill(), border='tan')
+        drawLabel('Select Start', 1350, 100, fill=app.buttonTextFill) 
+
+    #select path
+    selectPathButton = Button(1350-buttonWidth/2, 220-buttonHeight/2, 1350+buttonWidth/2, 220+buttonHeight/2, 'Map Editor', pressSelectPathButton, app.fillHover, 'tan')
+    checkHover(app, selectPathButton)
+    drawRect(1350-buttonWidth/2, 220-buttonHeight/2, buttonWidth, buttonHeight, fill=selectPathButton.getFill(), border='tan')
+    drawLabel('Select Path', 1350, 220, fill=app.buttonTextFill)
+
+    #select 1
+    select1Button = Button(1350-buttonWidth/2, 340-buttonHeight/2, 1350+buttonWidth/2, 340+buttonHeight/2, 'Map Editor', pressSelect1Button, app.fillHover, 'lawnGreen')
+    checkHover(app, select1Button)
+    drawRect(1350-buttonWidth/2, 340-buttonHeight/2, buttonWidth, buttonHeight, fill=select1Button.getFill(), border='lawnGreen')
+    drawLabel('Select 1', 1350, 340, fill=app.buttonTextFill)
+
+    #select 0
+    select0Button = Button(1350-buttonWidth/2, 460-buttonHeight/2, 1350+buttonWidth/2, 460+buttonHeight/2, 'Map Editor', pressSelect0Button, app.fillHover, 'limeGreen')
+    checkHover(app, select0Button)
+    drawRect(1350-buttonWidth/2, 460-buttonHeight/2, buttonWidth, buttonHeight, fill=select0Button.getFill(), border='limeGreen')
+    drawLabel('Select 0', 1350, 460, fill=app.buttonTextFill)
+
+    #save
+    saveButton = Button(1350-buttonWidth/2, 580-buttonHeight/2, 1350+buttonWidth/2, 580+buttonHeight/2, 'Map Editor', pressSaveButton, app.fillHover, app.fillNorm)
+    checkHover(app, saveButton)
+    drawRect(1350-buttonWidth/2, 580-buttonHeight/2, buttonWidth, buttonHeight, fill=saveButton.getFill(), border='limeGreen')
+    drawLabel('Save Map', 1350, 580, fill=app.buttonTextFill)
+
+def drawLoadMenu(app):
+    drawBackGround(app)
+
+    #Load Slot 1 button
+    buttonWidth = 250
+    buttonHeight = 300
+    load1Button = Button(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, app.width/2-100, app.height/2+buttonHeight/2+100, 'Load Menu', pressLoad1, app.fillHover, app.fillNorm)
+    checkHover(app, load1Button)
+    drawRect(app.width/2-buttonWidth-100, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=load1Button.getFill(), border=app.fillNorm )
+    drawLabel('Load Slot 1', app.width/2-buttonWidth/2-100, app.height/2+100, fill=app.buttonTextFill)
+
+    #Load Slot 2 button
+    buttonWidth = 250
+    buttonHeight = 300
+    load2Button = Button(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, app.width/2+350, app.height/2+buttonHeight/2, 'Load Menu', pressLoad2, app.fillHover, app.fillNorm)
+    checkHover(app, load2Button)
+    drawRect(app.width/2-buttonWidth+350, app.height/2-buttonHeight/2+100, buttonWidth, buttonHeight, fill=load2Button.getFill(), border=app.fillNorm)
+    drawLabel('Load Slot 2', app.width/2-buttonWidth/2+350, app.height/2+100, fill=app.buttonTextFill)
+    
+def drawLoad(app):
+    drawMap(app)
+    for tower in app.towers:
+        towerType = tower.getType()
+        if towerType == 'Magic': drawMagicTower(app, tower, 100)
+        elif towerType == 'Archer': drawArcherTower(app, tower, 100)
+        elif towerType == 'Bomb': drawBombTower(app, tower, 100)
+        if app.showingRange:
+            showRange(app, tower)
+    for enemy in app.enemies:
+        drawEnemy(app, enemy)
+    for projectile in app.projectiles:
+        drawProjectile(app, projectile)
+    
+    if not app.startWave and app.loaded and not app.finalWave: #wave button
+        startWave = Button(app.startCell[0]*app.cellSize, app.startCell[1]*app.cellSize, app.startCell[0]*app.cellSize+app.cellSize, app.startCell[1]*app.cellSize+app.cellSize, 'Load', pressStartWave, 'crimson', 'fireBrick')
+        checkHover(app, startWave)
+        drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
+    
+    #money
+    drawCircle(25, 25, 20, fill='gold')
+    drawCircle(25, 25, 15, fill='yellow')
+    drawLabel(f'{app.money}', 75, 25, size=20)
+
+    #heart
+    drawImage(app.heart, 0, 50, width=50, height=50)
+    drawLabel(f'{app.health}', 75, 75, size=20)
+
+    if app.paused: drawPauseMenu(app, 'Load')
+
+    #draw side menu
+    if not app.paused:
+        if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
+        #previews
+        if app.placement == 'm' and app.placingTowers: drawMagicPreview(app)
+        elif app.placement == 'b' and app.placingTowers: drawBombPreview(app)
+        elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
+
+        #need more money label
+        #if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+        
+        #upgrade tower menu
+        if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
+
+        #game over
+        if app.gameOver: drawGameOver(app)
+
+        if app.win: drawWin(app)
 def drawEndless(app):
     drawMap(app)
 
@@ -347,6 +553,8 @@ def drawEndless(app):
     drawImage(app.heart, 0, 50, width=50, height=50)
     drawLabel(f'{app.health}', 75, 75, size=20)
 
+    if app.paused: drawPauseMenu(app, 'Endless')
+
     #draw side menu
     if not app.paused:
         if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
@@ -356,7 +564,7 @@ def drawEndless(app):
         elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
 
         #need more money label
-        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+        #if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
         
         #upgrade tower menu
         if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
@@ -386,6 +594,8 @@ def drawTutorial(app):
         checkHover(app, startWave)
         drawCircle(app.startCell[0]*app.cellSize + app.cellSize/2, app.startCell[1]*app.cellSize + app.cellSize/2, app.cellSize/3, fill=startWave.getFill(), border=startWave.fillNorm)
 
+    if app.paused: drawPauseMenu(app, 'Tutorial')
+
     #draw side menu
     if not app.paused:
         if app.placingTowers and not mouseInSideMenu(app): drawSideMenu(app)
@@ -395,7 +605,7 @@ def drawTutorial(app):
         elif app.placement == 'a' and app.placingTowers: drawArcherPreview(app)
 
         #need more money label
-        if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
+        #if app.needMoreMoneyDraw and app.placingTowers: drawLabel('NEED MORE MONEY!', app.mouseLocation[0], app.mouseLocation[1]-50, size=20)
         
         #upgrade tower menu
         if app.drawTowerUpgrade[0]: drawTowerUpgrade(app)
@@ -421,8 +631,8 @@ def drawTutorialStory(app):
         
         drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
         gap = 50
-        drawLabel(f'Welcome to {app.title}!', app.width/2, app.height/2-gap*5, size=50, fill=fillColor)
-        drawLabel(f'{app.title} is a tower defense game!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
+        drawLabel(f'Welcome to {app.titleName}!', app.width/2, app.height/2-gap*5, size=50, fill=fillColor)
+        drawLabel(f'{app.titleName} is a tower defense game!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
         drawLabel(f'Enemies spawn at the red circle.', app.width/2, app.height/2+gap, size=30, fill=fillColor)
         drawLabel(f'Prevent them from getting to the end with towers!', app.width/2, app.height/2+2*gap, size=30, fill=fillColor)
         drawLabel(f'If enemies reach the end, you lose health', app.width/2, app.height/2+3*gap, size=30, fill=fillColor)
@@ -467,7 +677,6 @@ def drawTutorialStory(app):
         drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
         gap = 50
         drawLabel(f'Good luck and have fun!', app.width/2, app.height/2+0*gap, size=30, fill=fillColor)
-        
 
 
 def drawMap(app):
@@ -480,14 +689,18 @@ def drawCell(app, map, row, col):
     location = (col*app.cellSize, row*app.cellSize)
     if cell == 'S':
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+        drawLabel('S', location[0]+app.cellSize/2, location[1]+app.cellSize/2, fill='white')
     elif cell == 'E':
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
+        drawLabel('E', location[0]+app.cellSize/2, location[1]+app.cellSize/2, fill='white')
     elif cell == 'P':
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='tan')
     elif cell == 0:
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='limeGreen')
     elif cell == 1:
         drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='lawnGreen')
+    elif cell == None:
+        drawRect(location[0], location[1], app.cellSize, app.cellSize, fill='white', border='black')
 
 def drawMagicTower(app, tower, opacity):
     position = tower.position
@@ -569,7 +782,7 @@ def drawSideMenu(app):
 
 def drawTowerUpgrade(app):
     pass
-def drawGameOver(app, scene):
+def drawGameOver(app):
     drawRect(0, 0, app.width, app.height, fill='black', opacity=50)
     drawLabel('GAME OVER!', app.width/2, app.height/2-100, size=100)
 
@@ -612,9 +825,10 @@ def redrawAll(app):
         elif app.scene == "Game Menu" and app.loaded: drawGameMenu(app)
         elif app.scene == "Load Menu" and app.loaded: drawLoadMenu(app)
         elif app.scene == "Campaign" and app.loaded: drawCampaign(app)
-        elif app.scene == "Map Builder" and app.loaded: drawMapBuilder(app)
+        elif app.scene == "Map Editor" and app.loaded: drawMapEditor(app)
         elif app.scene == 'Endless' and app.loaded: drawEndless(app)
-        elif app.scene == 'Tutorial' and app.loaded: drawTutorial(app)            
+        elif app.scene == 'Tutorial' and app.loaded: drawTutorial(app)
+        elif app.scene == 'Load' and app.loaded: drawLoad(app)
 
 def mouseInSideMenu(app):
     return (1000 <= app.mouseLocation[0] <= 1200) and (0 <= app.mouseLocation[1] <= 800)
@@ -627,6 +841,21 @@ def pressPlay(app):
 def pressLoad(app): 
     app.scene = "Load Menu"
     app.loaded = False
+    print('pressed load')
+def pressLoad1(app):
+    f = open('save1.txt', 'r')
+    map = f.read()
+    app.map = parseMap(map)
+    f.close()
+    app.scene = 'Load'
+    app.loaded = False
+def pressLoad2(app):
+    f = open('save2.txt', 'r')
+    map = f.read()
+    app.map = parseMap(map)
+    f.close()
+    app.scene = 'Load'
+    app.loaded = False
 def pressCampaign(app): 
     app.scene = 'Campaign'
     app.loaded = False
@@ -637,9 +866,7 @@ def pressEndless(app):
         app.loaded = False
         print('pressed endless')
     else:
-        print('load tutorial')
-        app.scene = 'Tutorial'
-        app.loaded = False
+        app.showMessage('Play the tutorial first!')
 def pressMapEditor(app): 
     app.scene = 'Map Editor'
     app.loaded = False
@@ -656,23 +883,121 @@ def pressStartWave(app):
     app.startWave = True
 def pressMainMenuEndless(app):
     restart(app)
+def pressTutorial(app):
+    app.scene = 'Tutorial'
+    app.loaded = False
+    print('current scene: Tutorial')
+def pressBack(app):
+    if app.scene == 'Game Menu': app.scene = 'Title Page'
+    elif app.scene == 'Map Editor': app.scene = 'Game Menu'
+    elif app.scene == 'Campaign': app.scene = 'Game Menu'
+def pressSelectStartButton(app):
+    app.selectedBlock = 'S'
+def pressSelectEndButton(app):
+    app.selectedBlock = 'E'
+def pressSelectPathButton(app):
+    app.selectedBlock = 'P'
+def pressSelect0Button(app):
+    app.selectedBlock = 0
+def pressSelect1Button(app):
+    app.selectedBlock = 1
+def pressSaveButton(app):
+    loadMap(app)
+    if hasLegalPath(app):
+        saveLocation = askSaveLocation(app)
+        saveMap = copy.deepcopy(app.map)
+        convertMap(saveMap)
+        if saveLocation == '1':
+            f = open(app.save1, 'w')
+            f.write(str(saveMap))
+            f.close()
+        elif saveLocation == '2':
+            f = open(app.save2, 'w')
+            f.write(str(saveMap))
+            f.close()
+    else:
+        app.showMessage('No legal enemy path or multiple paths')
+        
 #end button functions
+def parseMap(map): #TAKEN FROM 
+    returnMap = []
+    map = map.strip('[[')
+    map = map.strip(']]')
+    listComas = map.split('], [')
+    for comad in listComas:
+        addList = []
+        for c in comad:
+            if c.isdigit():
+                addList.append(int(c))
+            elif c.isalpha():
+                addList.append(c)
+        returnMap.append(addList)
+    return returnMap
+
+
+def askSaveLocation(app):
+    response = app.getTextInput('Pick a location to save (1 or 2): ')
+    if not response in ['1', '2']:
+        app.showMessage('Please enter "1" or "2"!')
+        return askSaveLocation(app)
+    return response
+
+def convertMap(map):
+    rows, cols = len(map), len(map[0])
+    for row in range(rows):
+        for col in range(cols):
+            if map[row][col] == None:
+                map[row][col] = 1
+def hasLegalPath(app):
+    if (not findStart(app, app.map)) or (not findEnd(app, app.map)): return False
+    start = app.startCell
+    end = app.endCell
+    return hasLegalPathHelper(app, start, [], None, app.map)
+
+def hasLegalPathHelper(app, location, list, prevDirection, map):
+    if map[location[1]][location[0]] == 'E':
+        list.append(((location[0]*app.cellSize + app.cellSize/2, location[1]*app.cellSize + app.cellSize/2), prevDirection))
+        return True
+    else:
+        left = (location[0]-1, location[1])
+        right = (location[0]+1, location[1])
+        up = (location[0], location[1]-1)
+        down = (location[0], location[1]+1)
+        
+        if prevDirection != 'right' and isLegalCell(app, left) and (map[left[1]][left[0]] == 'P' or map[left[1]][left[0]] == 'E'): #check left
+            list.append(((left[0]*app.cellSize + app.cellSize/2, left[1]*app.cellSize + app.cellSize/2), 'left'))
+            return hasLegalPathHelper(app, left, list, 'left', map)
+        elif prevDirection != 'left' and isLegalCell(app, right) and (map[right[1]][right[0]] == 'P' or map[right[1]][right[0]] == 'E'): #check right
+            list.append(((right[0]*app.cellSize + app.cellSize/2, right[1]*app.cellSize + app.cellSize/2), 'right'))
+            return hasLegalPathHelper(app, right, list, 'right', map)
+        elif prevDirection != 'up' and isLegalCell(app, down) and (map[down[1]][down[0]] == 'P' or map[down[1]][down[0]] == 'E'): #check down
+            list.append(((down[0]*app.cellSize + app.cellSize/2, down[1]*app.cellSize + app.cellSize/2), 'down'))
+            return hasLegalPathHelper(app, down, list, 'down', map)
+        elif prevDirection != 'down' and isLegalCell(app, up) and (map[up[1]][up[0]] == 'P' or map[up[1]][up[0]] == 'E'): #check up
+            list.append(((up[0]*app.cellSize + app.cellSize/2, up[1]*app.cellSize + app.cellSize/2), 'up'))
+            return hasLegalPathHelper(app, up, list, 'up', map)
+        else:
+            return False
+        
+
 
 def onKeyPress(app, keys):
-    if 'k' in keys:
+    if 'escape' == keys:
+        pressBack(app)
+    if 'k' == keys:
         app.loaded = True
         app.scene = "Game Menu"
-    if 'r' in keys:
+    if 'r' == keys:
         app.loaded = True
         app.scene = 'Title Page'
     if app.scene in app.levels:
         if app.placingTowers:
-            if 'm' in keys: app.placement = 'm'
-            elif 'a' in keys: app.placement = 'a'
-            elif 'b' in keys: app.placement = 'b'
-        if 's' in keys:
+            if 'm' == keys: app.placement = 'm'
+            elif 'a' == keys: app.placement = 'a'
+            elif 'b' == keys: app.placement = 'b'
+        if 's' == keys:
             app.showingRange = True
-        if 'p' in keys:
+        if 'p' == keys:
             app.paused = not app.paused
 
 def onKeyRelease(app, keys):
@@ -680,11 +1005,21 @@ def onKeyRelease(app, keys):
         if 's' in keys:
             app.showingRange = False
 
+def onMouseDrag(app, mouseX, mouseY):
+    if app.scene == 'Map Editor' and app.loaded:
+        cellLocation = getCellLocation(app, (mouseX, mouseY))
+        if (0 <= cellLocation[0] < 30) and (0 <= cellLocation[1] < 20):
+            app.map[cellLocation[1]][cellLocation[0]] = app.selectedBlock
+
 def onMouseMove(app, mouseX, mouseY):
     app.mouseLocation = (mouseX, mouseY)
 
 def onMousePress(app, mouseX, mouseY):
-    #check buttons
+    if app.scene == 'Map Editor' and app.loaded:
+        cellLocation = getCellLocation(app, (mouseX, mouseY))
+        if (0 <= cellLocation[0] < 30) and (0 <= cellLocation[1] < 20):
+            app.map[cellLocation[1]][cellLocation[0]] = app.selectedBlock
+
     if app.scene == 'Tutorial':
         for i in range(len(app.checkpoints)):
             if not app.checkpoints[i]:
@@ -693,6 +1028,7 @@ def onMousePress(app, mouseX, mouseY):
                     app.paused = False
                 return
 
+    #check buttons
     for location in Button.buttonLocations.keys():
         if (app.scene == location[2]) and (location[0][0] <= mouseX <= location[1][0]) and (location[0][1] <= mouseY <= location[1][1]): #clicked button
             clicked = Button.buttonLocations[location]
@@ -748,6 +1084,9 @@ def hasMoney(app, cost):
 def getCell(app, position):
     location = (position[0]//app.cellSize, position[1]//app.cellSize)
     return app.map[location[1]][location[0]]
+def getCellLocation(app, position):
+    location = (position[0]//app.cellSize, position[1]//app.cellSize)
+    return location
 def intersectingCircles(position1, position2, size1, size2):
     return distance(position1[0], position1[1], position2[0], position2[1]) <= (size1 + size2)
 def clickedTower(tower, position):
