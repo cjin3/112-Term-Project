@@ -11,7 +11,7 @@ from load import *
 
 def onAppStart(app):
     print(time.time())
-    app.titleName = 'TBD'
+    app.titleName = 'BTD'
     app.scenes = ['Title Page', 'Game Menu', 'Map Editor', 'Campaign', 'Load Menu']
     app.levels = ['Endless', 'Tutorial', 'Load']
 
@@ -407,7 +407,7 @@ def drawCampaign(app):
     endlessButton = Button(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2, app.height/2+buttonHeight/2, 'Campaign', pressEndless, app.fillHover, app.fillNorm)
     checkHover(app, endlessButton)
     drawRect(app.width/2-buttonWidth/2, app.height/2-buttonHeight/2, buttonWidth, buttonHeight, fill=endlessButton.getFill(), border=app.fillNorm)
-    drawLabel('Endless Level', app.width/2, app.height/2, fill=app.buttonTextFill)
+    drawLabel('Level 1', app.width/2, app.height/2, fill=app.buttonTextFill)
     
     loadButton = Button(app.width/2-buttonWidth/2+400, app.height/2-buttonHeight/2, app.width/2+buttonWidth/2+400, app.height/2+buttonHeight/2, 'Campaign', pressLoad, app.fillHover, app.fillNorm)
     checkHover(app, loadButton)
@@ -443,18 +443,18 @@ def drawMapEditor(app):
     select1Button = Button(1350-buttonWidth/2, 340-buttonHeight/2, 1350+buttonWidth/2, 340+buttonHeight/2, 'Map Editor', pressSelect1Button, app.fillHover, 'lawnGreen')
     checkHover(app, select1Button)
     drawRect(1350-buttonWidth/2, 340-buttonHeight/2, buttonWidth, buttonHeight, fill=select1Button.getFill(), border='lawnGreen')
-    drawLabel('Select 1', 1350, 340, fill=app.buttonTextFill)
+    drawLabel('Select Green', 1350, 340, fill='black')
 
     #select 0
     select0Button = Button(1350-buttonWidth/2, 460-buttonHeight/2, 1350+buttonWidth/2, 460+buttonHeight/2, 'Map Editor', pressSelect0Button, app.fillHover, 'limeGreen')
     checkHover(app, select0Button)
     drawRect(1350-buttonWidth/2, 460-buttonHeight/2, buttonWidth, buttonHeight, fill=select0Button.getFill(), border='limeGreen')
-    drawLabel('Select 0', 1350, 460, fill=app.buttonTextFill)
+    drawLabel('Select Dark Green', 1350, 460, fill=app.buttonTextFill)
 
     #save
     saveButton = Button(1350-buttonWidth/2, 580-buttonHeight/2, 1350+buttonWidth/2, 580+buttonHeight/2, 'Map Editor', pressSaveButton, app.fillHover, app.fillNorm)
     checkHover(app, saveButton)
-    drawRect(1350-buttonWidth/2, 580-buttonHeight/2, buttonWidth, buttonHeight, fill=saveButton.getFill(), border='limeGreen')
+    drawRect(1350-buttonWidth/2, 580-buttonHeight/2, buttonWidth, buttonHeight, fill=saveButton.getFill(), border=app.fillNorm)
     drawLabel('Save Map', 1350, 580, fill=app.buttonTextFill)
 
 def drawLoadMenu(app):
@@ -768,7 +768,7 @@ def drawSideMenu(app):
     #draw magic tower
     drawLabel('Press "m" for Magic', 1100, 150, size=16)
     drawCircle(1100, 200, MAGIC_SIZE, fill='lightBlue', opacity=100)
-    drawLabel('200 coin', 1100, 200)
+    drawLabel('280 coin', 1100, 200)
 
     #draw bomb tower
     drawLabel('Press "b" for Bomb', 1100, 300, size=16)
@@ -778,7 +778,7 @@ def drawSideMenu(app):
     #draw archer tower
     drawLabel('Press "a" for Archer', 1100, 450, size=16)
     drawCircle(1100, 500, ARCHER_SIZE, fill='brown', opacity=100)
-    drawLabel('280 coin', 1100, 500)
+    drawLabel('200 coin', 1100, 500)
 
 def drawTowerUpgrade(app):
     pass
