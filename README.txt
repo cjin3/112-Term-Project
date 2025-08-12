@@ -11,3 +11,5 @@ You can press the 'escape' key to go back to the previous scene.
 You can press the 'r' key to go back to the title screen.
 
 Note: parseMap(map) function is taken from https://github.com/vixu8/hack112, main.py, lines 473 to 484, hack112 project
+
+Requires cmu_graphics package to run (See: https://academy.cs.cmu.edu/desktop).
